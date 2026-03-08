@@ -55,12 +55,12 @@ function renderProducts() {
     var finalPrice = discountP > 0 ? Math.round(price * (100 - discountP) / 100) : price;
     var qtyMax = Math.min(10, (p.quantity != null ? p.quantity : 999));
     var longDesc = formatLongDesc(p.longDescription);
-    var simLabel = p.desc && p.desc.trim() ? p.desc : 'شريحة بيانات STC لا محدود بدون استخدام عادل';
+    var simLine = (p.desc && p.desc.trim() ? p.desc : 'STC لا محدود بدون استخدام عادل');
     return '<article class="plan-card product-card product-card-modern ' + (p.planClass || '') + '" data-id="' + p.id + '">' +
       '<div class="product-image-wrap"><img src="' + escapeHtml(p.image || 'plan-monthly.png') + '" alt="' + escapeHtml(p.title) + '" class="product-image"></div>' +
       '<div class="product-sim-badge">' +
-        '<span class="product-sim-icon" aria-hidden="true"></span>' +
-        '<span class="product-sim-text">' + escapeHtml(simLabel) + '</span>' +
+        '<img src="sim-card.png" alt="" class="product-sim-img" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';"><span class="product-sim-icon product-sim-icon-fallback" aria-hidden="true"></span>' +
+        '<span class="product-sim-text">' + escapeHtml(simLine) + '</span>' +
       '</div>' +
       '<div class="product-price-box">' +
         '<span class="product-period">' + escapeHtml(p.period || p.title) + '</span>' +
