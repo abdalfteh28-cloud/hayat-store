@@ -3,197 +3,288 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>إعدادات المتجر — حياة</title>
+  <title>لوحة التحكم | متجر حياة</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <style>
-    .admin-page { max-width: 560px; margin: 2rem auto; padding: 0 1rem; }
-    .admin-page h1 { font-size: 1.5rem; margin-bottom: 1rem; }
-    .admin-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem; }
-    .admin-box label { display: block; margin-bottom: 1rem; }
-    .admin-box label span { display: block; margin-bottom: 0.35rem; font-weight: 500; color: var(--text-muted); }
-    .admin-box input { width: 100%; padding: 0.65rem; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; }
-    .admin-box .hint { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem; }
-    .admin-box .section-title { font-size: 1.1rem; margin: 1.25rem 0 0.5rem; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--primary); }
-    .admin-box .section-title:first-child { margin-top: 0; padding-top: 0; border-top: none; }
-    .admin-box button[type="submit"] { width: 100%; padding: 0.85rem; margin-top: 1rem; background: var(--primary); color: var(--bg); border: none; border-radius: var(--radius); font-family: inherit; font-weight: 700; cursor: pointer; }
-    .admin-box button[type="submit"]:hover { background: var(--primary-dim); }
-    .admin-box .msg { margin-top: 1rem; padding: 0.65rem; border-radius: 8px; display: none; }
-    .admin-box .msg.success { background: rgba(0,212,170,0.15); color: var(--primary); display: block; }
-    .admin-box .msg.error { background: rgba(248,81,73,0.15); color: #f85149; display: block; }
-    .admin-back { display: inline-block; margin-bottom: 1rem; color: var(--primary); text-decoration: none; font-weight: 500; }
-    .admin-box .hint a { color: var(--primary); text-decoration: none; }
-    .admin-box .hint a:hover { text-decoration: underline; }
+    :root { --admin-bg: #0f1419; --admin-surface: #1a2332; --admin-border: #30363d; --admin-primary: #00d4aa; --admin-text: #e6edf3; --admin-muted: #8b949e; --font: 'Tajawal', sans-serif; }
+    body { font-family: var(--font); background: var(--admin-bg); color: var(--admin-text); margin: 0; min-height: 100vh; }
+    .admin-layout { display: flex; min-height: 100vh; }
+    .admin-sidebar { width: 260px; flex-shrink: 0; background: var(--admin-surface); border-left: 1px solid var(--admin-border); padding: 1.25rem 0; }
+    .admin-sidebar h2 { font-size: 1.1rem; padding: 0 1.25rem; margin-bottom: 1rem; color: var(--admin-muted); }
+    .admin-nav { display: flex; flex-direction: column; gap: 0.25rem; }
+    .admin-nav a { display: block; padding: 0.75rem 1.25rem; color: var(--admin-text); text-decoration: none; font-weight: 600; transition: background 0.2s; }
+    .admin-nav a:hover { background: rgba(0,212,170,0.1); }
+    .admin-nav a.active { background: var(--admin-primary); color: #0f1419; }
+    .admin-main { flex: 1; padding: 1.5rem 2rem; overflow-x: auto; }
+    .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+    .admin-header h1 { font-size: 1.35rem; margin: 0; }
+    .admin-header .back { color: var(--admin-primary); text-decoration: none; font-weight: 600; }
+    .admin-panel { display: none; }
+    .admin-panel.active { display: block; }
+    .login-wrap { max-width: 380px; margin: 3rem auto; padding: 2rem; background: var(--admin-surface); border: 1px solid var(--admin-border); border-radius: 12px; }
+    .login-wrap h2 { margin-bottom: 1.25rem; }
+    .login-wrap label { display: block; margin-bottom: 1rem; }
+    .login-wrap label span { display: block; margin-bottom: 0.35rem; color: var(--admin-muted); font-size: 0.9rem; }
+    .login-wrap input { width: 100%; padding: 0.7rem; background: var(--admin-bg); border: 1px solid var(--admin-border); border-radius: 8px; color: var(--admin-text); font-family: var(--font); box-sizing: border-box; }
+    .login-wrap button { width: 100%; padding: 0.85rem; background: var(--admin-primary); color: var(--admin-bg); border: none; border-radius: 8px; font-family: var(--font); font-weight: 700; cursor: pointer; }
+    .login-error { color: #f85149; font-size: 0.9rem; margin-top: 0.5rem; }
+    .stat-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .stat-card { background: rgba(0,212,170,0.1); border: 1px solid rgba(0,212,170,0.3); border-radius: 10px; padding: 1rem; text-align: center; }
+    .stat-card .n { font-size: 1.6rem; font-weight: 800; color: var(--admin-primary); }
+    .stat-card .l { font-size: 0.85rem; color: var(--admin-muted); margin-top: 0.25rem; }
+    .orders-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    .orders-table th, .orders-table td { padding: 0.65rem 0.85rem; text-align: right; border-bottom: 1px solid var(--admin-border); }
+    .orders-table th { color: var(--admin-muted); font-weight: 600; }
+    .orders-table tr:hover { background: rgba(0,212,170,0.05); }
+    .os { display: inline-block; padding: 0.2rem 0.55rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; }
+    .os.paid { background: rgba(34,197,94,0.2); color: #22c55e; }
+    .os.confirmed { background: rgba(59,130,246,0.2); color: #3b82f6; }
+    .os.pending_payment { background: rgba(245,158,11,0.2); color: #f59e0b; }
+    .config-form label { display: block; margin-bottom: 1rem; }
+    .config-form label span { display: block; margin-bottom: 0.35rem; color: var(--admin-muted); font-size: 0.9rem; }
+    .config-form input, .config-form textarea { width: 100%; max-width: 420px; padding: 0.65rem 0.85rem; background: var(--admin-bg); border: 1px solid var(--admin-border); border-radius: 8px; color: var(--admin-text); font-family: var(--font); box-sizing: border-box; }
+    .config-form textarea { min-height: 80px; resize: vertical; }
+    .config-form button { padding: 0.75rem 1.5rem; background: var(--admin-primary); color: var(--admin-bg); border: none; border-radius: 8px; font-family: var(--font); font-weight: 700; cursor: pointer; }
+    .product-edit-card { background: var(--admin-surface); border: 1px solid var(--admin-border); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.25rem; }
+    .product-edit-card h4 { margin: 0 0 1rem; color: var(--admin-primary); font-size: 1.05rem; }
+    .product-edit-card label { display: block; margin-bottom: 0.75rem; }
+    .product-edit-card label span { display: block; margin-bottom: 0.25rem; color: var(--admin-muted); font-size: 0.85rem; }
+    .product-edit-card input, .product-edit-card textarea { width: 100%; padding: 0.5rem 0.75rem; background: var(--admin-bg); border: 1px solid var(--admin-border); border-radius: 6px; color: var(--admin-text); font-family: var(--font); box-sizing: border-box; }
+    .product-edit-card textarea { min-height: 120px; resize: vertical; }
+    .support-list { margin-top: 1.5rem; }
+    .support-item { background: var(--admin-surface); border: 1px solid var(--admin-border); border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem; font-size: 0.9rem; }
+    .support-item .meta { color: var(--admin-muted); font-size: 0.85rem; margin-bottom: 0.5rem; }
+    .saved-msg { color: var(--admin-primary); font-size: 0.9rem; margin-top: 0.5rem; }
+    @media (max-width: 768px) { .admin-layout { flex-direction: column; } .admin-sidebar { width: 100%; border-left: none; border-bottom: 1px solid var(--admin-border); } .admin-nav { flex-direction: row; flex-wrap: wrap; } }
   </style>
 </head>
 <body>
-  <div class="admin-page">
-    <a href="/" class="admin-back">← العودة للمتجر</a>
-    <h1>إعدادات المتجر</h1>
-    <p style="color: var(--text-muted); margin-bottom: 1rem;">أدخل بيانات بوابة الدفع وبوابة الشحن واختيارياً Google Analytics.</p>
+  <div id="loginScreen" class="login-wrap">
+    <h2>تسجيل الدخول — لوحة التحكم</h2>
+    <form id="loginForm">
+      <label><span>اسم المستخدم</span><input type="text" id="adminUser" required placeholder="HASSAN.1949"></label>
+      <label><span>كلمة المرور</span><input type="password" id="adminPass" required></label>
+      <button type="submit">دخول</button>
+      <p id="loginError" class="login-error" style="display:none;"></p>
+    </form>
+    <p style="margin-top:1rem;"><a href="/" class="back">← العودة للمتجر</a></p>
+  </div>
 
-    <div class="admin-box">
-      <form id="adminForm">
-        <p class="section-title">الدخول للإعدادات</p>
-        <label id="labelNewPassword" style="display: none;">
-          <span>كلمة مرور جديدة للإعدادات (احفظها)</span>
-          <input type="password" name="newPassword" id="newPassword" placeholder="4 أحرف على الأقل" minlength="4">
-          <span class="hint">ستُطلب منك مع اسم المستخدم عند كل تعديل</span>
-        </label>
-        <label id="labelLogin" style="display: none;">
-          <span>اسم المستخدم</span>
-          <input type="text" name="username" id="username" placeholder="HASSAN.1949" readonly>
-          <span class="hint">المستخدم الافتراضي: HASSAN.1949</span>
-        </label>
-        <label id="labelPassword" style="display: none;">
-          <span>كلمة المرور</span>
-          <input type="password" name="password" id="password" placeholder="أدخل كلمة المرور">
-        </label>
-        <label id="labelChangePassword" style="display: none;">
-          <span>تغيير كلمة المرور (اختياري)</span>
-          <input type="password" name="changePassword" id="changePasswordInput" placeholder="اتركها فارغة للإبقاء على الحالية" minlength="4">
-        </label>
+  <div id="dashboardScreen" class="admin-layout" style="display:none;">
+    <aside class="admin-sidebar">
+      <h2>لوحة التحكم</h2>
+      <nav class="admin-nav">
+        <a href="#" class="admin-nav-link active" data-panel="products">📦 المنتجات</a>
+        <a href="#" class="admin-nav-link" data-panel="orders">📋 الطلبات وبيانات العملاء</a>
+        <a href="#" class="admin-nav-link" data-panel="support">💬 رسائل الدعم الفني</a>
+        <a href="#" class="admin-nav-link" data-panel="config">⚙️ إعدادات المتجر</a>
+      </nav>
+      <p style="padding:1rem 1.25rem; margin:0; font-size:0.85rem;"><a href="/" class="back">← العودة للمتجر</a></p>
+    </aside>
+    <main class="admin-main">
+      <div id="panelProducts" class="admin-panel active">
+        <div class="admin-header"><h1>المنتجات</h1></div>
+        <p style="color:var(--admin-muted); margin-bottom:1rem;">عدّل وصف كل منتج، السعر، الكمية، والخصومات. التعديلات تظهر فوراً في المتجر.</p>
+        <div id="productsEditor"></div>
+        <button type="button" id="saveProductsBtn" style="padding:0.75rem 1.5rem; background:var(--admin-primary); color:var(--admin-bg); border:none; border-radius:8px; font-family:var(--font); font-weight:700; cursor:pointer;">حفظ كل المنتجات</button>
+        <p id="productsSaved" class="saved-msg" style="display:none;">تم حفظ المنتجات.</p>
+      </div>
 
-        <p class="section-title">بوابة الدفع (Moyasar)</p>
-        <label>
-          <span>مفتاح Moyasar السري (Secret Key)</span>
-          <input type="text" name="moyasarSecretKey" id="moyasarSecretKey" placeholder="sk_test_... أو sk_live_...">
-          <span class="hint">من لوحة Moyasar → الإعدادات → API Keys. اتركه فارغاً للإبقاء على المفتاح الحالي.</span>
-        </label>
+      <div id="panelOrders" class="admin-panel">
+        <div class="admin-header"><h1>الطلبات وبيانات العملاء</h1></div>
+        <div class="stat-cards" id="ordersStats"></div>
+        <div style="overflow-x:auto;">
+          <table class="orders-table" id="ordersTable">
+            <thead><tr><th>#</th><th>التاريخ</th><th>العميل</th><th>الجوال</th><th>العنوان</th><th>المبلغ</th><th>الحالة</th></tr></thead>
+            <tbody id="ordersBody"></tbody>
+          </table>
+        </div>
+        <p id="ordersEmpty" style="display:none; text-align:center; color:var(--admin-muted); padding:2rem;">لا توجد طلبات بعد.</p>
+      </div>
 
-        <p class="section-title">بوابة الشحن</p>
-        <label>
-          <span>سعر التوصيل العادي (ريال)</span>
-          <input type="number" name="shippingStandardPrice" id="shippingStandardPrice" value="36" min="0" step="1">
-        </label>
-        <label>
-          <span>سعر التوصيل السريع (ريال)</span>
-          <input type="number" name="shippingExpressPrice" id="shippingExpressPrice" value="41" min="0" step="1">
-        </label>
+      <div id="panelSupport" class="admin-panel">
+        <div class="admin-header"><h1>رسائل الدعم الفني</h1></div>
+        <p style="color:var(--admin-muted); margin-bottom:1rem;">طلبات التواصل مع الدعم من صفحة الموقع.</p>
+        <div id="supportList" class="support-list"></div>
+      </div>
 
-        <p class="section-title">عنوان الموقع و Google</p>
-        <label>
-          <span>عنوان الموقع (رابط المتجر)</span>
-          <input type="url" name="baseUrl" id="baseUrl" placeholder="https://your-store.com أو http://localhost:3000">
-          <span class="hint">الرابط الذي يفتح به المتجر. يُستخدم لعودة العميل بعد الدفع (Moyasar) وللروابط في الإشعارات. على جهازك للتجربة: <strong>http://localhost:3000</strong> — بعد الرفع على الإنترنت: ضع رابط موقعك الحقيقي (مثل https://hayat-store.onrender.com). لا تضف / في النهاية.</span>
-        </label>
-        <label>
-          <span>معرف Google Analytics (اختياري)</span>
-          <input type="text" name="googleAnalyticsId" id="googleAnalyticsId" placeholder="G-XXXXXXXXXX">
-          <span class="hint">لإحصائيات الزيارات: من <a href="https://analytics.google.com" target="_blank" rel="noopener">Google Analytics</a> → الإدارة → تدفق البيانات → اختر الموقع → معرّف القياس (يبدأ بـ G-). اتركه فارغاً إن لم تستخدم Analytics.</span>
-        </label>
-        <label>
-          <span>تحقق ملكية الموقع في Google (اختياري)</span>
-          <input type="text" name="googleSiteVerification" id="googleSiteVerification" placeholder="رمز التحقق من Search Console">
-          <span class="hint">من <a href="https://search.google.com/search-console" target="_blank" rel="noopener">Google Search Console</a> → إضافة موقع → طريقة "علامة HTML" → انسخ قيمة content فقط (الأحرف بين علامتي التنصيص).</span>
-        </label>
-
-        <div class="msg" id="formMsg"></div>
-        <button type="submit">حفظ الإعدادات</button>
-      </form>
-    </div>
+      <div id="panelConfig" class="admin-panel">
+        <div class="admin-header"><h1>إعدادات المتجر</h1></div>
+        <p style="color:var(--admin-muted); margin-bottom:1rem;">بوابة الدفع، الشحن، رابط الموقع، وكوبونات الخصم.</p>
+        <form id="configForm" class="config-form">
+          <label><span>رابط الموقع (BASE_URL)</span><input type="url" id="configBaseUrl" placeholder="https://hayat-store.onrender.com"><span class="hint" style="font-size:0.8rem; color:var(--admin-muted);">لا تضف / في النهاية.</span></label>
+          <label><span>مفتاح Moyasar السري</span><input type="password" id="configMoyasar" placeholder="sk_live_... أو sk_test_..."></label>
+          <label><span>سعر الشحن العادي (ر.س)</span><input type="number" id="configShipStd" min="0" value="36"></label>
+          <label><span>سعر الشحن السريع (ر.س)</span><input type="number" id="configShipExpress" min="0" value="41"></label>
+          <label><span>معرف Google Analytics (اختياري)</span><input type="text" id="configGA" placeholder="G-XXXXXXXXXX"></label>
+          <label><span>كوبونات الخصم (JSON مصفوفة، مثال: [{"code":"SAVE10","type":"percent","value":10}])</span><textarea id="configCoupons" rows="3" placeholder='[{"code":"SAVE10","type":"percent","value":10}]'></textarea></label>
+          <label><span>كلمة مرور جديدة (اتركها فارغة للإبقاء)</span><input type="password" id="configNewPass"></label>
+          <button type="submit">حفظ الإعدادات</button>
+          <p id="configSaved" class="saved-msg" style="display:none;">تم حفظ الإعدادات.</p>
+        </form>
+      </div>
+    </main>
   </div>
 
   <script>
-    (function() {
-      var form = document.getElementById('adminForm');
-      var labelNew = document.getElementById('labelNewPassword');
-      var labelLogin = document.getElementById('labelLogin');
-      var labelPass = document.getElementById('labelPassword');
-      var labelChangePass = document.getElementById('labelChangePassword');
-      var newPass = document.getElementById('newPassword');
-      var password = document.getElementById('password');
-      var username = document.getElementById('username');
-      var msg = document.getElementById('formMsg');
+(function() {
+  const loginScreen = document.getElementById('loginScreen');
+  const dashboardScreen = document.getElementById('dashboardScreen');
+  const loginForm = document.getElementById('loginForm');
+  const loginError = document.getElementById('loginError');
+  let adminAuth = null;
 
-      function showMsg(text, isError) {
-        msg.textContent = text;
-        msg.className = 'msg ' + (isError ? 'error' : 'success');
-      }
+  function b64(s) { try { return btoa(unescape(encodeURIComponent(s))); } catch (e) { return ''; } }
+  function authHeader() { return adminAuth ? { 'Authorization': 'Basic ' + b64(adminAuth.username + ':' + adminAuth.password) } : {}; }
 
-      fetch('/api/admin/status')
-        .then(function(r) { return r.json(); })
-        .then(function(s) {
-          if (s.hasConfig) {
-            labelLogin.style.display = 'block';
-            labelPass.style.display = 'block';
-            labelChangePass.style.display = 'block';
-            username.value = s.adminUsername || 'HASSAN.1949';
-            document.getElementById('shippingStandardPrice').value = s.shippingStandardPrice ?? 36;
-            document.getElementById('shippingExpressPrice').value = s.shippingExpressPrice ?? 41;
-            document.getElementById('googleAnalyticsId').value = s.googleAnalyticsId || '';
-            document.getElementById('googleSiteVerification').value = s.googleSiteVerification || '';
-            document.getElementById('baseUrl').value = s.baseUrl || '';
-          } else {
-            labelNew.style.display = 'block';
-            document.getElementById('shippingStandardPrice').value = 36;
-            document.getElementById('shippingExpressPrice').value = 41;
-          }
-        })
-        .catch(function() {
-          labelNew.style.display = 'block';
-          showMsg('لا يمكن الاتصال بالسيرفر. شغّل المتجر أولاً (تشغيل المتجر.bat).', true);
-        });
+  loginForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const username = document.getElementById('adminUser').value.trim();
+    const password = document.getElementById('adminPass').value;
+    loginError.style.display = 'none';
+    const res = await fetch('/api/admin/orders', { headers: { 'Authorization': 'Basic ' + b64(username + ':' + password) } });
+    const data = await res.json();
+    if (data.success) {
+      adminAuth = { username, password };
+      loginScreen.style.display = 'none';
+      dashboardScreen.style.display = 'flex';
+      loadOrders(); loadConfig(); loadProducts(); loadSupport();
+    } else {
+      loginError.textContent = data.message || 'اسم المستخدم أو كلمة المرور غير صحيحة';
+      loginError.style.display = 'block';
+    }
+  });
 
-      form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        var payload = {
-          shippingStandardPrice: document.getElementById('shippingStandardPrice').value,
-          shippingExpressPrice: document.getElementById('shippingExpressPrice').value,
-          googleAnalyticsId: document.getElementById('googleAnalyticsId').value,
-          googleSiteVerification: document.getElementById('googleSiteVerification').value.trim() || undefined,
-          baseUrl: document.getElementById('baseUrl').value
-        };
-        var keyVal = document.getElementById('moyasarSecretKey').value.trim();
-        if (keyVal) payload.moyasarSecretKey = keyVal;
-        if (labelPass.style.display !== 'none') {
-          payload.username = username.value.trim();
-          payload.password = password.value;
-          if (!payload.username || !payload.password) {
-            showMsg('أدخل اسم المستخدم وكلمة المرور', true);
-            return;
-          }
-          var np = document.getElementById('changePasswordInput');
-          if (np && np.value.trim().length >= 4) payload.newPassword = np.value.trim();
-        } else {
-          payload.newPassword = newPass.value;
-          if (!payload.newPassword || payload.newPassword.length < 4) {
-            showMsg('اختر كلمة مرور للإعدادات (4 أحرف على الأقل)', true);
-            return;
-          }
-        }
+  document.querySelectorAll('.admin-nav-link').forEach(function(a) {
+    a.addEventListener('click', function(e) { e.preventDefault();
+      document.querySelectorAll('.admin-nav-link').forEach(function(x) { x.classList.remove('active'); });
+      document.querySelectorAll('.admin-panel').forEach(function(p) { p.classList.remove('active'); });
+      this.classList.add('active');
+      var p = document.getElementById('panel' + this.getAttribute('data-panel').charAt(0).toUpperCase() + this.getAttribute('data-panel').slice(1));
+      if (p) p.classList.add('active');
+      if (this.getAttribute('data-panel') === 'products') loadProducts();
+      if (this.getAttribute('data-panel') === 'orders') loadOrders();
+      if (this.getAttribute('data-panel') === 'support') loadSupport();
+    });
+  });
 
-        msg.className = 'msg';
-        msg.textContent = 'جاري الحفظ...';
+  async function loadProducts() {
+    const res = await fetch('/api/admin/products', { headers: authHeader() });
+    const data = await res.json();
+    if (!data.success || !data.products) return;
+    const container = document.getElementById('productsEditor');
+    var imgs = ['plan-monthly.png','plan-3months.png','plan-6months.png','plan-year.png'];
+    var classes = ['plan-monthly','plan-3months','plan-6months','plan-year'];
+    container.innerHTML = data.products.map(function(p, i) {
+      return '<div class="product-edit-card" data-idx="' + i + '" data-image="' + (p.image || imgs[i]) + '" data-planclass="' + (p.planClass || classes[i]) + '">' +
+        '<h4>منتج: ' + (p.title || p.period) + '</h4>' +
+        '<label><span>العنوان / المدة</span><input type="text" name="title" value="' + (p.title || '').replace(/"/g,'&quot;') + '" placeholder="شهري"></label>' +
+        '<label><span>وصف قصير</span><input type="text" name="desc" value="' + (p.desc || '').replace(/"/g,'&quot;') + '" placeholder="لا محدود بدون استخدام عادل"></label>' +
+        '<label><span>شرح المنتج (ما يميز الشريحة + المواصفات)</span><textarea name="longDescription" rows="6">' + (p.longDescription || '').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') + '</textarea></label>' +
+        '<label><span>السعر (ر.س)</span><input type="number" name="price" min="0" value="' + (p.price || 0) + '"></label>' +
+        '<label><span>الكمية المتاحة</span><input type="number" name="quantity" min="0" value="' + (p.quantity != null ? p.quantity : 999) + '"></label>' +
+        '<label><span>نسبة الخصم % (0 = بدون خصم)</span><input type="number" name="discountPercent" min="0" max="100" value="' + (p.discountPercent != null ? p.discountPercent : 0) + '"></label>' +
+        '</div>';
+    }).join('');
+  }
 
-        fetch('/api/admin/config', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        })
-          .then(function(r) { return r.json(); })
-          .then(function(data) {
-            if (data.success) {
-              showMsg(data.message || 'تم حفظ الإعدادات');
-              if (payload.newPassword && labelNew.style.display !== 'none') {
-                labelNew.style.display = 'none';
-                newPass.value = '';
-                labelLogin.style.display = 'block';
-                labelPass.style.display = 'block';
-                labelChangePass.style.display = 'block';
-                username.value = 'HASSAN.1949';
-              }
-              password.value = '';
-              if (document.getElementById('changePasswordInput')) document.getElementById('changePasswordInput').value = '';
-            } else {
-              showMsg(data.message || 'فشل الحفظ', true);
-            }
-          })
-          .catch(function() {
-            showMsg('تعذر الاتصال بالسيرفر', true);
-          });
+  document.getElementById('saveProductsBtn').addEventListener('click', async function() {
+    const cards = document.querySelectorAll('#productsEditor .product-edit-card');
+    const products = [];
+    cards.forEach(function(card) {
+      products.push({
+        id: parseInt(card.getAttribute('data-idx'), 10) + 1,
+        period: card.querySelector('[name="title"]').value.trim() || 'شهري',
+        title: card.querySelector('[name="title"]').value.trim() || 'شهري',
+        desc: card.querySelector('[name="desc"]').value.trim() || '',
+        longDescription: card.querySelector('[name="longDescription"]').value.trim() || '',
+        price: parseInt(card.querySelector('[name="price"]').value, 10) || 0,
+        quantity: parseInt(card.querySelector('[name="quantity"]').value, 10) || 999,
+        image: card.getAttribute('data-image') || 'plan-monthly.png',
+        planClass: card.getAttribute('data-planclass') || 'plan-monthly',
+        discountPercent: parseInt(card.querySelector('[name="discountPercent"]').value, 10) || 0,
+        couponCode: ''
       });
-    })();
+    });
+    const res = await fetch('/api/admin/products', { method: 'POST', headers: { ...authHeader(), 'Content-Type': 'application/json' }, body: JSON.stringify({ products }) });
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById('productsSaved').style.display = 'block';
+      setTimeout(function() { document.getElementById('productsSaved').style.display = 'none'; }, 3000);
+    } else alert(data.message || 'فشل الحفظ');
+  });
+
+  async function loadOrders() {
+    const res = await fetch('/api/admin/orders', { headers: authHeader() });
+    const data = await res.json();
+    if (!data.success) return;
+    const orders = data.orders || [];
+    var rev = 0, paid = 0;
+    orders.forEach(function(o) { rev += o.total || 0; if (o.status === 'paid' || o.status === 'confirmed') paid++; });
+    document.getElementById('ordersStats').innerHTML =
+      '<div class="stat-card"><span class="n">' + orders.length + '</span><span class="l">إجمالي الطلبات</span></div>' +
+      '<div class="stat-card"><span class="n">' + paid + '</span><span class="l">مؤكدة / مدفوعة</span></div>' +
+      '<div class="stat-card"><span class="n">' + Math.round(rev) + ' ر.س</span><span class="l">إجمالي المبيعات</span></div>';
+    var tbody = document.getElementById('ordersBody');
+    document.getElementById('ordersEmpty').style.display = orders.length ? 'none' : 'block';
+    tbody.innerHTML = orders.length ? orders.slice(0, 100).map(function(o) {
+      var st = o.status === 'paid' ? 'مدفوع' : o.status === 'confirmed' ? 'مؤكد' : o.status === 'pending_payment' ? 'بانتظار الدفع' : o.status || '-';
+      var sc = (o.status || '').replace(/\s/g, '_');
+      var date = o.date ? new Date(o.date).toLocaleDateString('ar-SA') : '-';
+      return '<tr><td>' + o.id + '</td><td>' + date + '</td><td>' + (o.name || '-') + '</td><td>' + (o.phone || '-') + '</td><td>' + (o.address || '-') + '</td><td>' + (o.total || 0) + ' ر.س</td><td><span class="os ' + sc + '">' + st + '</span></td></tr>';
+    }).join('') : '';
+  }
+
+  async function loadSupport() {
+    const res = await fetch('/api/admin/support', { headers: authHeader() });
+    const data = await res.json();
+    if (!data.success) return;
+    const list = document.getElementById('supportList');
+    const requests = data.requests || [];
+    list.innerHTML = requests.length ? requests.map(function(r) {
+      return '<div class="support-item"><div class="meta">#' + r.id + ' — ' + (r.date ? new Date(r.date).toLocaleString('ar-SA') : '') + ' — ' + (r.name || '') + ' — ' + (r.phone || r.email || '') + '</div><strong>' + (r.subject || 'بدون موضوع') + '</strong><p style="margin:0.5rem 0 0;">' + (r.message || '').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</p></div>';
+    }).join('') : '<p style="color:var(--admin-muted);">لا توجد رسائل حتى الآن.</p>';
+  }
+
+  async function loadConfig() {
+    const res = await fetch('/api/admin/status');
+    const c = await res.json();
+    document.getElementById('configBaseUrl').value = c.baseUrl || '';
+    document.getElementById('configMoyasar').value = c.paymentConfigured ? '••••••••' : '';
+    document.getElementById('configShipStd').value = c.shippingStandardPrice != null ? c.shippingStandardPrice : 36;
+    document.getElementById('configShipExpress').value = c.shippingExpressPrice != null ? c.shippingExpressPrice : 41;
+    document.getElementById('configGA').value = c.googleAnalyticsId || '';
+    document.getElementById('configCoupons').value = Array.isArray(c.coupons) && c.coupons.length ? JSON.stringify(c.coupons, null, 2) : '[]';
+  }
+
+  document.getElementById('configForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    var payload = {
+      username: adminAuth.username,
+      password: adminAuth.password,
+      baseUrl: document.getElementById('configBaseUrl').value.trim(),
+      shippingStandardPrice: parseInt(document.getElementById('configShipStd').value, 10),
+      shippingExpressPrice: parseInt(document.getElementById('configShipExpress').value, 10),
+      googleAnalyticsId: document.getElementById('configGA').value.trim(),
+      coupons: []
+    };
+    try { payload.coupons = JSON.parse(document.getElementById('configCoupons').value || '[]'); } catch (e) {}
+    var m = document.getElementById('configMoyasar').value;
+    if (m && m !== '••••••••') payload.moyasarSecretKey = m;
+    var np = document.getElementById('configNewPass').value;
+    if (np) payload.newPassword = np;
+    var res = await fetch('/api/admin/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    var data = await res.json();
+    if (data.success) {
+      document.getElementById('configSaved').style.display = 'block';
+      document.getElementById('configNewPass').value = '';
+      setTimeout(function() { document.getElementById('configSaved').style.display = 'none'; }, 3000);
+    } else alert(data.message || 'فشل الحفظ');
+  });
+})();
   </script>
 </body>
 </html>

@@ -3,16 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>حياة | شرائح إنترنت لا محدود — تواصل أينما كنت</title>
-  <meta name="description" content="متجر حياة — شرائح إنترنت لا محدود بدون استخدام عادل. باقات شهري و٣ شهور و٦ شهور وسنة. توصيل سريع ودعم فني.">
-  <meta name="keywords" content="حياة, شرائح انترنت, باقات انترنت, انترنت لا محدود, شرائح بيانات, حياة للانترنت, HAYAAT">
-  <meta name="author" content="حياة">
-  <meta name="robots" content="index, follow">
-  <!-- Open Graph لظهور أفضل عند المشاركة والبحث -->
-  <meta property="og:title" content="حياة | شرائح إنترنت لا محدود">
-  <meta property="og:description" content="شرائح إنترنت لا محدود بدون استخدام عادل. باقات شهري، ٣ شهور، ٦ شهور، سنة. تواصل أينما كنت.">
-  <meta property="og:type" content="website">
-  <meta property="og:locale" content="ar_SA">
+  <title>حياة: تواصل... أينما كنت | شرائح الإنترنت</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -21,18 +12,6 @@
   <script>
     (function() {
       fetch('/api/config').then(function(r) { return r.json(); }).then(function(c) {
-        if (c.baseUrl) {
-          var link = document.createElement('link');
-          link.rel = 'canonical';
-          link.href = c.baseUrl.replace(/\/$/, '');
-          document.head.appendChild(link);
-        }
-        if (c.googleSiteVerification) {
-          var meta = document.createElement('meta');
-          meta.name = 'google-site-verification';
-          meta.content = c.googleSiteVerification;
-          document.head.appendChild(meta);
-        }
         if (c.googleAnalyticsId) {
           window.dataLayer = window.dataLayer || [];
           function gtag(){ dataLayer.push(arguments); }
@@ -57,9 +36,10 @@
         <a href="#products">الباقات</a>
         <a href="#store-icons">أيقونات المتجر</a>
         <a href="#about">من نحن</a>
+        <a href="#why-trust">لماذا نحن</a>
         <a href="#contact">تواصل</a>
         <a href="#faq">الأسئلة الشائعة</a>
-        <a href="/admin.html" class="nav-settings" title="إعدادات المتجر">⚙️</a>
+        <a href="/admin" class="nav-settings">⚙️</a>
       </nav>
       <button class="cart-btn" id="cartBtn" aria-label="سلة المشتريات">
         <span class="cart-icon">🛒</span>
@@ -69,7 +49,19 @@
   </header>
 
   <main>
-    <section class="hero">
+    <!-- شريط عروض متحرك -->
+    <div class="promo-bar" aria-hidden="true">
+      <div class="promo-bar-inner">
+        <span>عرض خاص — باقات لا محدود بدون استخدام عادل</span>
+        <span>شهري • ٣ شهور • ٦ شهور • سنة</span>
+        <span>توصيل لجميع المناطق</span>
+        <span>عرض خاص — باقات لا محدود بدون استخدام عادل</span>
+        <span>شهري • ٣ شهور • ٦ شهور • سنة</span>
+        <span>توصيل لجميع المناطق</span>
+      </div>
+    </div>
+
+    <section class="hero hero-animate">
       <div class="container">
         <h1 class="hero-headline">شرائح الإنترنت من حياة... تفتح لك أبواب العالم!</h1>
         <p class="hero-desc">استمتع بالسرعة والموثوقية التي تستحقها. متجر حياة يقدم لك أفضل باقات الإنترنت.</p>
@@ -112,7 +104,7 @@
       </div>
     </section>
 
-    <section class="products" id="products">
+    <section class="products products-section" id="products">
       <div class="container">
         <h2 class="section-title">الباقات</h2>
         <p class="section-subtitle">جميع الباقات لا محدود بدون استخدام عادل</p>
@@ -127,6 +119,40 @@
       </div>
     </section>
 
+    <section class="why-trust" id="why-trust">
+      <div class="container">
+        <h2 class="section-title">لماذا يثق العملاء في "متجر حياة"؟</h2>
+        <p class="why-trust-intro">نحن ندرك أن الإنترنت اليوم هو المحرك الأساسي لأعمالك وترفيهك، لذا صممنا خدماتنا لنتفوق على توقعاتك:</p>
+        <div class="trust-cards">
+          <div class="trust-card">
+            <span class="trust-icon">🚀</span>
+            <h3>حرية البيانات المطلقة</h3>
+            <p>وداعاً لرسائل "انتهت باقتك". مع شرائحنا اللامحدودة، استمتع بتحميل الأفلام، الألعاب، والبث المباشر دون التفكير في حجم الاستهلاك أو سياسة الاستخدام العادل.</p>
+          </div>
+          <div class="trust-card">
+            <span class="trust-icon">💰</span>
+            <h3>استثمار ذكي لميزانيتك</h3>
+            <p>لماذا تدفع مبالغ طائلة مقابل باقات محدودة؟ نوفر لك عقوداً وحلولاً تمنحك إنترنت مفتوحاً بتكلفة توفر عليك الكثير شهرياً مقارنة بالباقات التقليدية.</p>
+          </div>
+          <div class="trust-card">
+            <span class="trust-icon">📶</span>
+            <h3>استقرار وسرعة فائقة</h3>
+            <p>نحن نختار لك أفضل الشبكات التي تضمن لك تغطية قوية وسرعة ثابتة، سواء كنت في المنزل، المكتب، أو حتى في رحلاتك البرية.</p>
+          </div>
+          <div class="trust-card">
+            <span class="trust-icon">🛠️</span>
+            <h3>دعم فني "حيّ" ومعك</h3>
+            <p>في متجر حياة، العميل ليس مجرد رقم. فريقنا متواجد دائماً للإجابة على استفساراتك وضمان تفعيل شريحتك وعملها بأفضل كفاءة من اللحظة الأولى.</p>
+          </div>
+          <div class="trust-card">
+            <span class="trust-icon">💳</span>
+            <h3>أمان وسهولة في الطلب</h3>
+            <p>تجربة تسوق رقمية 100%؛ ابدأ طلبك بضغطة زر، اختر وسيلة الدفع التي تناسبك، واستلم شريحتك لتبدأ حياتك الرقمية الجديدة فوراً.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="contact" id="contact">
       <div class="container">
         <h2>تواصل معنا</h2>
@@ -137,19 +163,43 @@
 
     <section class="faq-section" id="faq">
       <div class="container">
-        <h2>الأسئلة الشائعة</h2>
+        <h2 class="section-title">❓ الأسئلة الشائعة (كل ما تود معرفته)</h2>
+        <p class="faq-intro">نحن هنا لنجعل تجربتك شفافة وواضحة من اللحظة الأولى:</p>
         <div class="faq-list">
           <div class="faq-item">
-            <h4>كيف أطلب شريحة؟</h4>
-            <p>اختر الباقة من المتجر، أضفها إلى السلة، ثم أتمم الطلب وسنتواصل معك.</p>
+            <span class="faq-num">1</span>
+            <div class="faq-content">
+              <h4>هل الإنترنت "لا محدود" فعلاً أم توجد سياسة استخدام عادل؟</h4>
+              <p>في متجر حياة، نوفر لك باقات "لا محدود حقيقي" بدون سياسة استخدام عادل. هذا يعني أن السرعة لا تنخفض مهما كان حجم استهلاكك للبيانات، استمتع بالتحميل والمشاهدة بأقصى سرعة طوال الوقت.</p>
+            </div>
           </div>
           <div class="faq-item">
-            <h4>هل الباقات لا محدود فعلاً؟</h4>
-            <p>نعم، جميع باقات حياة لا محدود بدون استخدام عادل.</p>
+            <span class="faq-num">2</span>
+            <div class="faq-content">
+              <h4>هل الشريحة تدعم تقنية الـ 5G والـ 4G؟</h4>
+              <p>نعم، جميع شرائحنا تدعم أحدث تقنيات الاتصال 5G و 4G لضمان حصولك على أفضل سرعة استجابة (Ping) وأعلى سرعة تحميل ممكنة بحسب تغطية الشبكة في منطقتك.</p>
+            </div>
           </div>
           <div class="faq-item">
-            <h4>كيف أتواصل بالدعم الفني؟</h4>
-            <p>من خلال قسم «تواصل معنا» أو واتساب على الرقم الموحد.</p>
+            <span class="faq-num">3</span>
+            <div class="faq-content">
+              <h4>كيف يتم تفعيل الشريحة بعد الشراء؟</h4>
+              <p>التفعيل يتم بطريقة رقمية وسهلة جداً عبر تطبيق (نفاذ)، بمجرد إتمام الطلب وتوثيقه، ستكون شريحتك جاهزة للعمل فوراً (في حال كانت إلكترونية eSIM) أو يتم شحنها لك وتفعيلها عند الاستلام.</p>
+            </div>
+          </div>
+          <div class="faq-item">
+            <span class="faq-num">4</span>
+            <div class="faq-content">
+              <h4>هل يمكنني استخدام الشريحة في الراوتر (المودم) أو الجوال؟</h4>
+              <p>بالتأكيد، شرائحنا مرنة جداً؛ يمكنك وضعها في جوالك الشخصي، أو في راوتر منزلي، أو حتى أجهزة "الماي فاي" المتنقلة لتوزيع الإنترنت على جميع أجهزتك.</p>
+            </div>
+          </div>
+          <div class="faq-item">
+            <span class="faq-num">5</span>
+            <div class="faq-content">
+              <h4>ماذا لو واجهت مشكلة في التغطية أو السرعة؟</h4>
+              <p>فريق دعم حياة معك دائماً. قبل الشراء، ننصحك بالتأكد من تغطية البرج التابع للشريحة في منطقتك، وفي حال واجهت أي تحدي فني، فريقنا جاهز لمساعدتك في الإعدادات لضمان أفضل أداء.</p>
+            </div>
           </div>
         </div>
       </div>
@@ -201,8 +251,14 @@
           </select>
           <span class="shipping-hint" id="shippingHint"></span>
         </label>
+        <label>
+          <span>كود الخصم (اختياري)</span>
+          <input type="text" name="coupon" id="couponInput" placeholder="أدخل الكود">
+          <span class="coupon-msg" id="couponMsg"></span>
+        </label>
         <div class="order-summary" id="orderSummary">
           <span>المجموع الفرعي:</span> <span id="subtotalEl">٠ ر.س</span><br>
+          <span>الخصم:</span> <span id="discountEl">٠ ر.س</span><br>
           <span>الشحن:</span> <span id="shippingEl">٠ ر.س</span><br>
           <strong>الإجمالي:</strong> <span id="totalEl">٠ ر.س</span>
         </div>
@@ -215,11 +271,37 @@
     </div>
   </div>
 
+  <section class="footer-policies" id="footer-policies">
+    <div class="container">
+      <h2 class="section-title">سياسة الشحن والتوصيل</h2>
+      <div class="policy-text">
+        <p>نوصل شرائح حياة لجميع مناطق المملكة. يمكنك اختيار <strong>توصيل عادي</strong> (2–4 أيام) أو <strong>توصيل سريع</strong> (1–2 يوم). تكلفة الشحن تظهر عند إتمام الطلب حسب اختيارك. التفعيل يتم عبر تطبيق (نفاذ) أو عند الاستلام حسب نوع الشريحة.</p>
+      </div>
+
+      <h2 class="section-title">الدعم الفني والتواصل</h2>
+      <p class="policy-intro">للاستفسارات أو المشاكل التقنية، راسلنا عبر النموذج أدناه مع ذكر رقم الطلب أو وصف المشكلة وسنتواصل معك في أقرب وقت.</p>
+      <form id="supportForm" class="support-form">
+        <label><span>الاسم</span><input type="text" name="name" required placeholder="اسمك"></label>
+        <label><span>رقم الجوال</span><input type="tel" name="phone" placeholder="05xxxxxxxx"></label>
+        <label><span>البريد الإلكتروني (اختياري)</span><input type="email" name="email" placeholder="example@email.com"></label>
+        <label><span>موضوع الرسالة</span><input type="text" name="subject" placeholder="مثال: مشكلة في التفعيل"></label>
+        <label><span>وصف المشكلة أو الاستفسار</span><textarea name="message" rows="4" required placeholder="اشرح المشكلة أو السؤال..."></textarea></label>
+        <button type="submit">إرسال</button>
+        <p id="supportFormMsg" class="form-msg"></p>
+      </form>
+
+      <h2 class="section-title">سياسة الاستبدال والاسترجاع</h2>
+      <div class="policy-text">
+        <p>نحرص على رضاك. في حال وجود خلل في الشريحة أو عدم مطابقتها للمواصفات المعلنة، يرجى التواصل مع الدعم الفني خلال <strong>7 أيام</strong> من الاستلام مع الاحتفاظ بالفاتورة. ندرس كل حالة ونوفر استبدالاً أو حلاً مناسباً وفق سياساتنا. الشحن اللامحدود يُقدّم كخدمة بيانات؛ لا يُسترد المبلغ بعد التفعيل والاستخدام إلا في حالات استثنائية يحددها الفريق.</p>
+      </div>
+    </div>
+  </section>
+
   <footer class="footer">
     <div class="container">
       <p>© حياة: تواصل... أينما كنت — جميع الحقوق محفوظة</p>
       <p class="footer-tags">#حياة #إنترنت #شرائح_بيانات #تواصل_بلا_حدود</p>
-      <p><a href="/admin.html" class="admin-link">إعدادات المتجر (بوابة الدفع والشحن)</a></p>
+      <p><a href="/admin" class="admin-link">إعدادات المتجر (بوابة الدفع والشحن)</a></p>
       <p class="backend-status" id="backendStatus">جاري التحقق من الاتصال...</p>
     </div>
   </footer>

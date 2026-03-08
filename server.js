@@ -8,6 +8,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const ORDERS_FILE = path.join(__dirname, 'data', 'orders.json');
 const CONFIG_FILE = path.join(__dirname, 'data', 'config.json');
+const PRODUCTS_FILE = path.join(__dirname, 'data', 'products.json');
+const SUPPORT_FILE = path.join(__dirname, 'data', 'support.json');
 
 function getConfig() {
   let c = {};
@@ -21,10 +23,10 @@ function getConfig() {
     shippingStandardPrice: c.shippingStandardPrice != null ? c.shippingStandardPrice : 36,
     shippingExpressPrice: c.shippingExpressPrice != null ? c.shippingExpressPrice : 41,
     googleAnalyticsId: c.googleAnalyticsId || process.env.GOOGLE_ANALYTICS_ID || '',
-    googleSiteVerification: c.googleSiteVerification || '',
     baseUrl: (c.baseUrl || process.env.BASE_URL || '').trim() || `http://localhost:${PORT}`,
     adminUsername: (c.adminUsername || 'HASSAN.1949').trim(),
-    adminPasswordHash: c.adminPasswordHash || ''
+    adminPasswordHash: c.adminPasswordHash || '',
+    coupons: Array.isArray(c.coupons) ? c.coupons : []
   };
 }
 function saveConfig(obj) {
@@ -40,8 +42,8 @@ function saveConfig(obj) {
   if (obj.shippingStandardPrice !== undefined) existing.shippingStandardPrice = obj.shippingStandardPrice;
   if (obj.shippingExpressPrice !== undefined) existing.shippingExpressPrice = obj.shippingExpressPrice;
   if (obj.googleAnalyticsId !== undefined) existing.googleAnalyticsId = obj.googleAnalyticsId;
-  if (obj.googleSiteVerification !== undefined) existing.googleSiteVerification = obj.googleSiteVerification;
   if (obj.baseUrl !== undefined) existing.baseUrl = obj.baseUrl;
+  if (obj.coupons !== undefined) existing.coupons = obj.coupons;
   fs.writeFileSync(CONFIG_FILE, JSON.stringify(existing, null, 2), 'utf8');
 }
 function hashPassword(pwd) {
@@ -76,8 +78,33 @@ if (!fs.existsSync(CONFIG_FILE)) {
     shippingExpressPrice: 41,
     baseUrl: '',
     moyasarSecretKey: '',
-    googleAnalyticsId: ''
+    googleAnalyticsId: '',
+    coupons: []
   }, null, 2), 'utf8');
+}
+if (!fs.existsSync(PRODUCTS_FILE)) {
+  const defaultProducts = [
+    { id: 1, period: 'شهري', title: 'شهري', desc: 'لا محدود بدون استخدام عادل', longDescription: '', price: 269, quantity: 999, image: 'plan-monthly.png', planClass: 'plan-monthly', discountPercent: 0, couponCode: '' },
+    { id: 2, period: '3 شهور', title: '٣ شهور', desc: 'لا محدود بدون استخدام عادل', longDescription: '', price: 719, quantity: 999, image: 'plan-3months.png', planClass: 'plan-3months', discountPercent: 0, couponCode: '' },
+    { id: 3, period: '6 شهور', title: '٦ شهور', desc: 'لا محدود بدون استخدام عادل', longDescription: '', price: 1349, quantity: 999, image: 'plan-6months.png', planClass: 'plan-6months', discountPercent: 0, couponCode: '' },
+    { id: 4, period: 'سنة', title: 'سنة', desc: 'لا محدود بدون استخدام عادل', longDescription: '', price: 2200, quantity: 999, image: 'plan-year.png', planClass: 'plan-year', discountPercent: 0, couponCode: '' }
+  ];
+  fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(defaultProducts, null, 2), 'utf8');
+}
+if (!fs.existsSync(SUPPORT_FILE)) {
+  fs.writeFileSync(SUPPORT_FILE, JSON.stringify([], null, 2), 'utf8');
+}
+
+function readProducts() {
+  try {
+    return JSON.parse(fs.readFileSync(PRODUCTS_FILE, 'utf8'));
+  } catch {
+    return [];
+  }
+}
+
+function saveProducts(products) {
+  fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(products, null, 2), 'utf8');
 }
 
 function readOrders() {
@@ -90,6 +117,18 @@ function readOrders() {
 
 function saveOrders(orders) {
   fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2), 'utf8');
+}
+
+function readSupport() {
+  try {
+    return JSON.parse(fs.readFileSync(SUPPORT_FILE, 'utf8'));
+  } catch {
+    return [];
+  }
+}
+
+function saveSupport(list) {
+  fs.writeFileSync(SUPPORT_FILE, JSON.stringify(list, null, 2), 'utf8');
 }
 
 function findOrderById(id) {
@@ -107,21 +146,6 @@ function updateOrderStatus(orderId, status, paymentId) {
   return true;
 }
 
-// ─── sitemap و robots لـ Google ───
-app.get('/sitemap.xml', (req, res) => {
-  const base = (getConfig().baseUrl || '').replace(/\/$/, '') || `http://localhost:${PORT}`;
-  res.type('application/xml');
-  res.send(`<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>${base}/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
-</urlset>`);
-});
-app.get('/robots.txt', (req, res) => {
-  const base = (getConfig().baseUrl || '').replace(/\/$/, '') || `http://localhost:${PORT}`;
-  res.type('text/plain');
-  res.send(`User-agent: *\nAllow: /\n\nSitemap: ${base}/sitemap.xml`);
-});
-
 // ─── فحص صحة الباك إند (لتأكيد الربط) ───
 app.get('/api/health', (req, res) => {
   res.json({
@@ -131,6 +155,24 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// ─── المنتجات (عام) ───
+app.get('/api/products', (req, res) => {
+  try {
+    res.json({ success: true, products: readProducts() });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'حدث خطأ' });
+  }
+});
+
+// ─── التحقق من كوبون الخصم ───
+app.get('/api/coupon/:code', (req, res) => {
+  const c = getConfig();
+  const code = (req.params.code || '').trim().toUpperCase();
+  const coupon = (c.coupons || []).find(x => String(x.code || '').toUpperCase() === code);
+  if (!coupon) return res.json({ valid: false });
+  res.json({ valid: true, type: coupon.type || 'percent', value: coupon.value || 0 });
+});
+
 // ─── إعدادات المتجر (للفرونت إند) ───
 app.get('/api/config', (req, res) => {
   const c = getConfig();
@@ -138,7 +180,6 @@ app.get('/api/config', (req, res) => {
     paymentGateway: c.moyasarSecretKey ? 'moyasar' : 'none',
     shippingEnabled: true,
     googleAnalyticsId: c.googleAnalyticsId || '',
-    googleSiteVerification: c.googleSiteVerification || '',
     baseUrl: c.baseUrl
   });
 });
@@ -153,15 +194,15 @@ app.get('/api/admin/status', (req, res) => {
     shippingStandardPrice: c.shippingStandardPrice,
     shippingExpressPrice: c.shippingExpressPrice,
     googleAnalyticsId: c.googleAnalyticsId || '',
-    googleSiteVerification: c.googleSiteVerification || '',
-    baseUrl: c.baseUrl || ''
+    baseUrl: c.baseUrl || '',
+    coupons: c.coupons || []
   });
 });
 
-// ─── حفظ إعدادات المتجر (بوابة الدفع، الشحن، جوجل، تحقق جوجل، تغيير كلمة المرور) (بوابة الدفع، الشحن، جوجل، تغيير كلمة المرور) ───
+// ─── حفظ إعدادات المتجر (بوابة الدفع، الشحن، جوجل، تغيير كلمة المرور) ───
 app.post('/api/admin/config', (req, res) => {
   try {
-    const { username, password, newPassword, moyasarSecretKey, shippingStandardPrice, shippingExpressPrice, googleAnalyticsId, googleSiteVerification, baseUrl } = req.body || {};
+    const { username, password, newPassword, moyasarSecretKey, shippingStandardPrice, shippingExpressPrice, googleAnalyticsId, baseUrl, coupons } = req.body || {};
     const c = getConfig();
 
     if (c.adminPasswordHash) {
@@ -173,8 +214,8 @@ app.post('/api/admin/config', (req, res) => {
         shippingStandardPrice: shippingStandardPrice !== undefined ? parseInt(shippingStandardPrice, 10) : undefined,
         shippingExpressPrice: shippingExpressPrice !== undefined ? parseInt(shippingExpressPrice, 10) : undefined,
         googleAnalyticsId: googleAnalyticsId !== undefined ? String(googleAnalyticsId).trim() : undefined,
-        googleSiteVerification: googleSiteVerification !== undefined ? String(googleSiteVerification).trim() : undefined,
-        baseUrl: baseUrl !== undefined ? String(baseUrl).trim() : undefined
+        baseUrl: baseUrl !== undefined ? String(baseUrl).trim() : undefined,
+        coupons: coupons !== undefined ? (Array.isArray(coupons) ? coupons : []) : undefined
       };
       if (newPassword && String(newPassword).length >= 4) {
         toSave.adminPasswordHash = hashPassword(newPassword);
@@ -193,7 +234,6 @@ app.post('/api/admin/config', (req, res) => {
       shippingStandardPrice: shippingStandardPrice !== undefined ? parseInt(shippingStandardPrice, 10) : 36,
       shippingExpressPrice: shippingExpressPrice !== undefined ? parseInt(shippingExpressPrice, 10) : 41,
       googleAnalyticsId: googleAnalyticsId !== undefined ? String(googleAnalyticsId).trim() : '',
-      googleSiteVerification: googleSiteVerification !== undefined ? String(googleSiteVerification).trim() : '',
       baseUrl: baseUrl !== undefined ? String(baseUrl).trim() : ''
     });
     return res.json({ success: true, message: 'تم حفظ الإعدادات' });
@@ -220,7 +260,7 @@ app.get('/api/shipping/options', (req, res) => {
 // ─── إنشاء الطلب ───
 app.post('/api/order', (req, res) => {
   try {
-    const { name, phone, email, address, notes, items, total, shippingOptionId, shippingCost } = req.body;
+    const { name, phone, email, address, notes, items, total, shippingOptionId, shippingCost, discountAmount } = req.body;
     if (!name || !phone || !address || !items || !Array.isArray(items)) {
       return res.status(400).json({
         success: false,
@@ -230,7 +270,8 @@ app.post('/api/order', (req, res) => {
 
     const subtotal = typeof total === 'number' ? total : items.reduce((s, i) => s + (i.price || 0) * (i.qty || 1), 0);
     const shipping = typeof shippingCost === 'number' ? shippingCost : 0;
-    const totalWithShipping = subtotal + shipping;
+    const discount = typeof discountAmount === 'number' ? Math.min(discountAmount, subtotal) : 0;
+    const totalWithShipping = Math.max(0, subtotal - discount + shipping);
 
     const order = {
       id: Date.now(),
@@ -242,6 +283,7 @@ app.post('/api/order', (req, res) => {
       notes: notes || '',
       items,
       subtotal,
+      discountAmount: discount,
       shippingOptionId: shippingOptionId || '',
       shippingCost: shipping,
       total: totalWithShipping,
@@ -348,14 +390,95 @@ app.post('/api/payment/callback', (req, res) => {
   }
 });
 
-// ─── صفحة النجاح بعد الدفع (العميل يرجع هنا) ───
-app.get('/api/orders', (req, res) => {
+// ─── الطلبات (للداشبورد — يتطلب تسجيل أدمن) ───
+function parseBasicAuth(req) {
+  const h = req.headers.authorization || '';
+  if (!h.startsWith('Basic ')) return null;
   try {
-    res.json({ success: true, orders: readOrders() });
+    const b = Buffer.from(h.slice(6), 'base64').toString('utf8');
+    const i = b.indexOf(':');
+    if (i === -1) return null;
+    return { username: b.slice(0, i), password: b.slice(i + 1) };
+  } catch (e) { return null; }
+}
+
+app.get('/api/admin/orders', (req, res) => {
+  try {
+    const auth = parseBasicAuth(req);
+    if (!auth || !verifyAdmin(auth.username, auth.password)) {
+      return res.status(401).json({ success: false, message: 'يجب تسجيل الدخول' });
+    }
+    const orders = readOrders();
+    res.json({ success: true, orders: orders.reverse() });
   } catch (err) {
     res.status(500).json({ success: false, message: 'حدث خطأ' });
   }
 });
+
+app.get('/api/admin/products', (req, res) => {
+  try {
+    const auth = parseBasicAuth(req);
+    if (!auth || !verifyAdmin(auth.username, auth.password)) {
+      return res.status(401).json({ success: false, message: 'يجب تسجيل الدخول' });
+    }
+    res.json({ success: true, products: readProducts() });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'حدث خطأ' });
+  }
+});
+
+app.post('/api/admin/products', (req, res) => {
+  try {
+    const auth = parseBasicAuth(req);
+    if (!auth || !verifyAdmin(auth.username, auth.password)) {
+      return res.status(401).json({ success: false, message: 'يجب تسجيل الدخول' });
+    }
+    const products = req.body.products;
+    if (!Array.isArray(products)) return res.status(400).json({ success: false, message: 'بيانات غير صالحة' });
+    saveProducts(products);
+    res.json({ success: true, message: 'تم حفظ المنتجات' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'حدث خطأ' });
+  }
+});
+
+app.get('/api/admin/support', (req, res) => {
+  try {
+    const auth = parseBasicAuth(req);
+    if (!auth || !verifyAdmin(auth.username, auth.password)) {
+      return res.status(401).json({ success: false, message: 'يجب تسجيل الدخول' });
+    }
+    res.json({ success: true, requests: readSupport().reverse() });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'حدث خطأ' });
+  }
+});
+
+app.post('/api/support', (req, res) => {
+  try {
+    const { name, phone, email, subject, message } = req.body || {};
+    if (!name || !message) {
+      return res.status(400).json({ success: false, message: 'الاسم والرسالة مطلوبان' });
+    }
+    const list = readSupport();
+    list.push({
+      id: Date.now(),
+      date: new Date().toISOString(),
+      name: String(name).trim(),
+      phone: String(phone || '').trim(),
+      email: String(email || '').trim(),
+      subject: String(subject || '').trim(),
+      message: String(message).trim()
+    });
+    saveSupport(list);
+    res.json({ success: true, message: 'تم استلام رسالتك وسنتواصل معك قريباً' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'حدث خطأ' });
+  }
+});
+
+app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
+app.get('/admin.html', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
 
 app.get('*', (req, res) => {
   if (req.path.startsWith('/api')) return res.status(404).json({ error: 'Not found' });

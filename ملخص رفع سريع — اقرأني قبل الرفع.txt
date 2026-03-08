@@ -1,0 +1,33 @@
+═══════════════════════════════════════════════════════════
+  ملخص رفع سريع — كيف ترفع التعديلات حتى تظهر على الموقع
+═══════════════════════════════════════════════════════════
+
+■ الرابط بعد الرفع:
+  https://hayat-store.onrender.com
+
+■ الخطوات (بعد تثبيت Git من https://git-scm.com/download/win):
+
+  1) افتح PowerShell أو CMD
+
+  2) ادخل لمجلد المشروع:
+     cd "c:\Users\hardw\OneDrive\Documents\مجلد جديد"
+
+  3) رفع كل الملفات:
+     git add .
+     git commit -m "تحديث المتجر"
+     git push origin main
+
+     لو قال لك الفرع master بدل main اكتب:
+     git push origin master
+
+  4) إذا طلب اسم مستخدم وكلمة مرور = حساب GitHub (أو Token)
+
+  5) انتظر 2–5 دقائق ثم افتح الرابط وحدّث الصفحة (F5)
+
+───────────────────────────────────────────────────────────
+■ بدل Git — رفع يدوي من الموقع:
+  ادخل https://github.com/abdalfteh28-cloud/hayat-store
+  عدّل كل ملف (Edit) والصق المحتوى من مجلدك ثم Commit:
+  index.html ، styles.css ، server.js ، admin.html ، script.js
+  وإن وُجد: data/products.json (من مجلد data)
+───────────────────────────────────────────────────────────
