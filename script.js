@@ -55,15 +55,15 @@ function renderProducts() {
     var finalPrice = discountP > 0 ? Math.round(price * (100 - discountP) / 100) : price;
     var qtyMax = Math.min(10, (p.quantity != null ? p.quantity : 999));
     var longDesc = formatLongDesc(p.longDescription);
-    var simLine = (p.desc && p.desc.trim() ? p.desc : 'STC لا محدود بدون استخدام عادل');
-    return '<article class="plan-card product-card product-card-modern ' + (p.planClass || '') + '" data-id="' + p.id + '">' +
+    return '<article class="plan-card product-card product-card-v2 ' + (p.planClass || '') + '" data-id="' + p.id + '">' +
       '<div class="product-image-wrap"><img src="' + escapeHtml(p.image || 'plan-monthly.png') + '" alt="' + escapeHtml(p.title) + '" class="product-image"></div>' +
-      '<div class="product-sim-badge">' +
-        '<img src="sim-card.png" alt="" class="product-sim-img" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';"><span class="product-sim-icon product-sim-icon-fallback" aria-hidden="true"></span>' +
-        '<span class="product-sim-text">' + escapeHtml(simLine) + '</span>' +
+      '<p class="product-tagline">باقة "حياة" المفتوحة 🚀</p>' +
+      '<div class="product-sim-row">' +
+        '<div class="product-sim-thumb"><img src="sim-card.png" alt="" class="product-sim-thumb-img" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';"><span class="product-sim-thumb-stc" aria-hidden="true">STC</span></div>' +
+        '<span class="product-sim-caption">لا محدود بدون استخدام عادل</span>' +
       '</div>' +
+      '<div class="product-period-line"><span class="product-period">' + escapeHtml(p.period || p.title) + '</span></div>' +
       '<div class="product-price-box">' +
-        '<span class="product-period">' + escapeHtml(p.period || p.title) + '</span>' +
         (discountP > 0 ? '<span class="product-price-old">' + price + ' ر.س</span>' : '') +
         '<span class="product-price">' + finalPrice + ' <small>ر.س</small></span>' +
         (discountP > 0 ? '<span class="product-discount-badge">−' + discountP + '%</span>' : '') +

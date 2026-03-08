@@ -686,103 +686,119 @@ body {
   font-family: var(--font);
   font-size: 1rem;
 }
-/* بطاقة المنتج الحديثة — للعميل (عرض مضغوط، سطر واحد لكل جملة) */
-.product-card-modern .product-sim-badge {
+/* ─── بطاقة المنتج v2: صورة → ذهبي "باقة حياة المفتوحة" → شريحة STC + نص → مدة → سعر → خيارات ─── */
+.product-tagline {
+  margin: 0 1rem 0.5rem;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #d4a84b;
+  text-align: center;
+  text-shadow: 0 0 24px rgba(212, 168, 75, 0.4);
+}
+.product-sim-row {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  margin: 0 1rem 0.7rem;
-  padding: 0.5rem 0.85rem;
-  background: rgba(0, 212, 170, 0.14);
-  border: 1px solid rgba(0, 212, 170, 0.4);
+  margin: 0 1rem 0.6rem;
+  padding: 0.4rem 0.75rem;
+  background: rgba(0, 212, 170, 0.08);
+  border: 1px solid rgba(0, 212, 170, 0.3);
   border-radius: 10px;
-  white-space: nowrap;
-  min-height: 40px;
 }
-.product-sim-img {
-  width: auto;
-  height: 28px;
+.product-sim-thumb {
   flex-shrink: 0;
-  display: block;
-  object-fit: contain;
-}
-.product-sim-icon.product-sim-icon-fallback {
-  display: none;
+  width: 48px;
+  height: 32px;
+  display: flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 24px;
-  min-width: 34px;
-  flex-shrink: 0;
-  background: linear-gradient(135deg, #1a2332 0%, #243044 100%);
-  border-radius: 5px;
+  background: linear-gradient(145deg, #1a2332 0%, #243044 100%);
+  border-radius: 6px;
   border: 1px solid var(--border);
+  overflow: hidden;
   position: relative;
 }
-.product-sim-icon::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 11px;
-  height: 8px;
-  background: var(--primary);
-  border-radius: 2px;
-  opacity: 0.7;
+.product-sim-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }
-.product-sim-text {
+.product-sim-thumb-stc {
+  display: none;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #fff;
+  background: #e30613;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  letter-spacing: 0.03em;
+}
+.product-sim-caption {
   font-size: 0.9rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text);
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-@media (min-width: 500px) {
-  .product-sim-text { font-size: 0.95rem; }
+.product-period-line {
+  margin: 0 1rem 0.4rem;
+  text-align: center;
 }
-.product-card-modern .product-price-box {
-  margin: 0 1rem 0.7rem;
-  padding: 0.65rem 0.85rem;
+.product-period-line .product-period {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--primary);
+  white-space: nowrap;
+}
+.product-card-v2 .product-price-box {
+  margin: 0 1rem 0.6rem;
+  padding: 0.6rem 0.85rem;
   background: rgba(26, 35, 50, 0.6);
   border-radius: 10px;
   border: 1px solid var(--border);
   text-align: center;
 }
-.product-card-modern .product-period {
-  display: block;
-  font-size: 0.9rem;
-  color: var(--primary);
-  font-weight: 700;
-  margin-bottom: 0.2rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.product-card-modern .product-price-box .product-price {
-  font-size: 1.45rem;
+.product-card-v2 .product-price-box .product-price {
+  font-size: 1.5rem;
   font-weight: 800;
-  display: block;
+  display: inline-block;
   white-space: nowrap;
 }
-.product-card-modern .product-price-box .product-price-old {
+.product-card-v2 .product-price-box .product-price-old {
   display: block;
   font-size: 0.9rem;
-  margin-bottom: 0.15rem;
-  white-space: nowrap;
+  margin-bottom: 0.2rem;
+  color: var(--text-muted);
+  text-decoration: line-through;
 }
-.product-card-modern .product-options-box {
-  margin: 0 1rem 0.7rem;
+.product-card-v2 .product-price-box .product-discount-badge {
+  margin-right: 0.35rem;
+}
+.product-card-v2 .product-options-box {
+  margin: 0 1rem 0.6rem;
   padding: 0.5rem 0.75rem;
   background: rgba(26, 35, 50, 0.4);
   border-radius: 10px;
   border: 1px solid rgba(48, 54, 61, 0.5);
 }
+.product-card-modern .product-sim-badge,
+.product-card-modern .product-price-box,
+.product-card-modern .product-period,
+.product-card-modern .product-options-box { margin: 0 1rem 0.7rem; }
+.product-card-modern .product-price-box { padding: 0.65rem 0.85rem; }
+.product-card-modern .product-period { display: block; font-size: 0.9rem; margin-bottom: 0.2rem; }
+.product-card-modern .product-price-box .product-price { font-size: 1.45rem; display: block; }
+.product-card-modern .product-price-box .product-price-old { display: block; font-size: 0.9rem; margin-bottom: 0.15rem; }
 .product-card-modern .product-data-box {
   margin: 0 1rem 0.7rem;
   border: 1px solid var(--border);
   border-radius: 10px;
   overflow: hidden;
+}
+.product-card-v2 .product-data-box {
+  margin: 0 1rem 0.6rem;
 }
 .product-data-toggle {
   width: 100%;
