@@ -1,0 +1,12 @@
+# Render — إعداد النشر التلقائي لمتجر حياة
+# عند ربط المستودع اختر "Apply" أو استخدم New → Web Service واتبع الإعداد يدوياً
+
+services:
+  - type: web
+    name: hayat-store
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 18

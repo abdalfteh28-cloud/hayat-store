@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>حياة | شرائح إنترنت لا محدود — تواصل أينما كنت</title>
+  <meta name="description" content="متجر حياة — شرائح إنترنت لا محدود بدون استخدام عادل. باقات شهري و٣ شهور و٦ شهور وسنة. توصيل سريع ودعم فني.">
+  <meta name="keywords" content="حياة, شرائح انترنت, باقات انترنت, انترنت لا محدود, شرائح بيانات, حياة للانترنت, HAYAAT">
+  <meta name="author" content="حياة">
+  <meta name="robots" content="index, follow">
+  <!-- Open Graph لظهور أفضل عند المشاركة والبحث -->
+  <meta property="og:title" content="حياة | شرائح إنترنت لا محدود">
+  <meta property="og:description" content="شرائح إنترنت لا محدود بدون استخدام عادل. باقات شهري، ٣ شهور، ٦ شهور، سنة. تواصل أينما كنت.">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="ar_SA">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="logo.png" type="image/png">
+  <link rel="stylesheet" href="styles.css">
+  <script>
+    (function() {
+      fetch('/api/config').then(function(r) { return r.json(); }).then(function(c) {
+        if (c.baseUrl) {
+          var link = document.createElement('link');
+          link.rel = 'canonical';
+          link.href = c.baseUrl.replace(/\/$/, '');
+          document.head.appendChild(link);
+        }
+        if (c.googleSiteVerification) {
+          var meta = document.createElement('meta');
+          meta.name = 'google-site-verification';
+          meta.content = c.googleSiteVerification;
+          document.head.appendChild(meta);
+        }
+        if (c.googleAnalyticsId) {
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){ dataLayer.push(arguments); }
+          gtag('js', new Date());
+          gtag('config', c.googleAnalyticsId);
+          var s = document.createElement('script');
+          s.src = 'https://www.googletagmanager.com/gtag/js?id=' + c.googleAnalyticsId;
+          s.async = true;
+          document.head.appendChild(s);
+        }
+      }).catch(function() {});
+    })();
+  </script>
+</head>
+<body>
+  <header class="header">
+    <div class="container header-inner">
+      <a href="#" class="logo">
+        <img src="logo.png" alt="حياة - HAYAAT Internet SIM Cards" class="logo-img">
+      </a>
+      <nav class="nav">
+        <a href="#products">الباقات</a>
+        <a href="#store-icons">أيقونات المتجر</a>
+        <a href="#about">من نحن</a>
+        <a href="#contact">تواصل</a>
+        <a href="#faq">الأسئلة الشائعة</a>
+        <a href="/admin.html" class="nav-settings" title="إعدادات المتجر">⚙️</a>
+      </nav>
+      <button class="cart-btn" id="cartBtn" aria-label="سلة المشتريات">
+        <span class="cart-icon">🛒</span>
+        <span class="cart-count" id="cartCount">0</span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container">
+        <h1 class="hero-headline">شرائح الإنترنت من حياة... تفتح لك أبواب العالم!</h1>
+        <p class="hero-desc">استمتع بالسرعة والموثوقية التي تستحقها. متجر حياة يقدم لك أفضل باقات الإنترنت.</p>
+        <div class="hero-welcome">
+          <p class="hero-welcome-line">👋 أهلاً بك في متجر "حياة"!</p>
+          <p class="hero-welcome-line">🌐 وجهتك الأولى لشرائح الإنترنت الأسرع والأكثر موثوقية.</p>
+          <p class="hero-welcome-line">🚀 لا تفوت لحظة! استمتع باتصال مستقر وسرعات هائلة.</p>
+          <p class="hero-welcome-line">📍 تغطية واسعة تناسب احتياجاتك.</p>
+          <p class="hero-welcome-line">👇 اطلب شريحتك الآن وعِش تجربة الإنترنت الحقيقية!</p>
+        </div>
+        <div class="hero-links">
+          <a href="#products" class="hero-link">المتجر</a>
+          <a href="#contact" class="hero-link">تواصل معنا</a>
+        </div>
+        <p class="hero-cta-text">مستعد تبدأ رحلتك؟ اطلب شريحة حياة اليوم!</p>
+        <a href="#products" class="hero-cta-btn">اطلب شريحتك الآن</a>
+        <p class="hero-hashtags">#حياة #إنترنت #شرائح_بيانات #تواصل_بلا_حدود</p>
+      </div>
+    </section>
+
+    <section class="store-icons-section" id="store-icons">
+      <div class="container">
+        <div class="store-icons-image-wrap">
+          <img src="store-icons.png" alt="حياة — الباقات، الدعم الفني، الأسئلة الشائعة" class="store-icons-img">
+        </div>
+        <div class="store-icons-links">
+          <a href="#products" class="store-icon-item">
+            <span class="store-icon-title">الباقات</span>
+            <span class="store-icon-title-en">Plans & Bundles</span>
+          </a>
+          <a href="#contact" class="store-icon-item">
+            <span class="store-icon-title">الدعم الفني</span>
+            <span class="store-icon-title-en">Technical Support</span>
+          </a>
+          <a href="#faq" class="store-icon-item">
+            <span class="store-icon-title">الأسئلة الشائعة</span>
+            <span class="store-icon-title-en">FAQ</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="products" id="products">
+      <div class="container">
+        <h2 class="section-title">الباقات</h2>
+        <p class="section-subtitle">جميع الباقات لا محدود بدون استخدام عادل</p>
+        <div class="products-grid plans-grid" id="productsGrid"></div>
+      </div>
+    </section>
+
+    <section class="about" id="about">
+      <div class="container">
+        <h2>من نحن</h2>
+        <p>حياة تقدم لك إنترنت لا محدود بدون استخدام عادل — شهري أو 3 شهور أو 6 شهور أو سنة. جودة واستقرار ودعم متواصل.</p>
+      </div>
+    </section>
+
+    <section class="contact" id="contact">
+      <div class="container">
+        <h2>تواصل معنا</h2>
+        <p><strong>عنوان المتجر:</strong> حياة</p>
+        <p>للطلبات والدعم: واتساب أو اتصال على الرقم الموحد</p>
+      </div>
+    </section>
+
+    <section class="faq-section" id="faq">
+      <div class="container">
+        <h2>الأسئلة الشائعة</h2>
+        <div class="faq-list">
+          <div class="faq-item">
+            <h4>كيف أطلب شريحة؟</h4>
+            <p>اختر الباقة من المتجر، أضفها إلى السلة، ثم أتمم الطلب وسنتواصل معك.</p>
+          </div>
+          <div class="faq-item">
+            <h4>هل الباقات لا محدود فعلاً؟</h4>
+            <p>نعم، جميع باقات حياة لا محدود بدون استخدام عادل.</p>
+          </div>
+          <div class="faq-item">
+            <h4>كيف أتواصل بالدعم الفني؟</h4>
+            <p>من خلال قسم «تواصل معنا» أو واتساب على الرقم الموحد.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <aside class="cart-sidebar" id="cartSidebar">
+    <div class="cart-header">
+      <h3>سلة المشتريات</h3>
+      <button class="close-cart" id="closeCart" aria-label="إغلاق">✕</button>
+    </div>
+    <div class="cart-items" id="cartItems"></div>
+    <div class="cart-footer">
+      <div class="cart-total">
+        <span>المجموع:</span>
+        <span id="cartTotal">٠ ر.س</span>
+      </div>
+      <button class="checkout-btn" id="checkoutBtn">إتمام الطلب</button>
+    </div>
+  </aside>
+
+  <div class="cart-overlay" id="cartOverlay"></div>
+
+  <div class="checkout-modal" id="checkoutModal">
+    <div class="modal-content">
+      <button class="close-modal" id="closeModal">✕</button>
+      <h3>إتمام الطلب</h3>
+      <form id="checkoutForm">
+        <label>
+          <span>الاسم الكامل</span>
+          <input type="text" name="name" required placeholder="أدخل اسمك">
+        </label>
+        <label>
+          <span>رقم الجوال</span>
+          <input type="tel" name="phone" required placeholder="05xxxxxxxx">
+        </label>
+        <label>
+          <span>البريد الإلكتروني</span>
+          <input type="email" name="email" placeholder="example@email.com">
+        </label>
+        <label>
+          <span>العنوان / المدينة</span>
+          <input type="text" name="address" required placeholder="المدينة أو العنوان">
+        </label>
+        <label class="shipping-label">
+          <span>طريقة التوصيل</span>
+          <select name="shipping" id="shippingSelect" required>
+            <option value="">اختر التوصيل...</option>
+          </select>
+          <span class="shipping-hint" id="shippingHint"></span>
+        </label>
+        <div class="order-summary" id="orderSummary">
+          <span>المجموع الفرعي:</span> <span id="subtotalEl">٠ ر.س</span><br>
+          <span>الشحن:</span> <span id="shippingEl">٠ ر.س</span><br>
+          <strong>الإجمالي:</strong> <span id="totalEl">٠ ر.س</span>
+        </div>
+        <label>
+          <span>ملاحظات</span>
+          <textarea name="notes" rows="3" placeholder="ملاحظات إضافية للطلب"></textarea>
+        </label>
+        <button type="submit" class="submit-order">تأكيد الطلب</button>
+      </form>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+      <p>© حياة: تواصل... أينما كنت — جميع الحقوق محفوظة</p>
+      <p class="footer-tags">#حياة #إنترنت #شرائح_بيانات #تواصل_بلا_حدود</p>
+      <p><a href="/admin.html" class="admin-link">إعدادات المتجر (بوابة الدفع والشحن)</a></p>
+      <p class="backend-status" id="backendStatus">جاري التحقق من الاتصال...</p>
+    </div>
+  </footer>
+
+  <div class="payment-success-toast" id="paymentSuccessToast">
+    <p>تم الدفع بنجاح. سنتواصل معك قريباً.</p>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>

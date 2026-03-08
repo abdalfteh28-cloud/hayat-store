@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إعدادات المتجر — حياة</title>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .admin-page { max-width: 560px; margin: 2rem auto; padding: 0 1rem; }
+    .admin-page h1 { font-size: 1.5rem; margin-bottom: 1rem; }
+    .admin-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem; }
+    .admin-box label { display: block; margin-bottom: 1rem; }
+    .admin-box label span { display: block; margin-bottom: 0.35rem; font-weight: 500; color: var(--text-muted); }
+    .admin-box input { width: 100%; padding: 0.65rem; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; }
+    .admin-box .hint { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem; }
+    .admin-box .section-title { font-size: 1.1rem; margin: 1.25rem 0 0.5rem; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--primary); }
+    .admin-box .section-title:first-child { margin-top: 0; padding-top: 0; border-top: none; }
+    .admin-box button[type="submit"] { width: 100%; padding: 0.85rem; margin-top: 1rem; background: var(--primary); color: var(--bg); border: none; border-radius: var(--radius); font-family: inherit; font-weight: 700; cursor: pointer; }
+    .admin-box button[type="submit"]:hover { background: var(--primary-dim); }
+    .admin-box .msg { margin-top: 1rem; padding: 0.65rem; border-radius: 8px; display: none; }
+    .admin-box .msg.success { background: rgba(0,212,170,0.15); color: var(--primary); display: block; }
+    .admin-box .msg.error { background: rgba(248,81,73,0.15); color: #f85149; display: block; }
+    .admin-back { display: inline-block; margin-bottom: 1rem; color: var(--primary); text-decoration: none; font-weight: 500; }
+    .admin-box .hint a { color: var(--primary); text-decoration: none; }
+    .admin-box .hint a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="admin-page">
+    <a href="/" class="admin-back">← العودة للمتجر</a>
+    <h1>إعدادات المتجر</h1>
+    <p style="color: var(--text-muted); margin-bottom: 1rem;">أدخل بيانات بوابة الدفع وبوابة الشحن واختيارياً Google Analytics.</p>
+
+    <div class="admin-box">
+      <form id="adminForm">
+        <p class="section-title">الدخول للإعدادات</p>
+        <label id="labelNewPassword" style="display: none;">
+          <span>كلمة مرور جديدة للإعدادات (احفظها)</span>
+          <input type="password" name="newPassword" id="newPassword" placeholder="4 أحرف على الأقل" minlength="4">
+          <span class="hint">ستُطلب منك مع اسم المستخدم عند كل تعديل</span>
+        </label>
+        <label id="labelLogin" style="display: none;">
+          <span>اسم المستخدم</span>
+          <input type="text" name="username" id="username" placeholder="HASSAN.1949" readonly>
+          <span class="hint">المستخدم الافتراضي: HASSAN.1949</span>
+        </label>
+        <label id="labelPassword" style="display: none;">
+          <span>كلمة المرور</span>
+          <input type="password" name="password" id="password" placeholder="أدخل كلمة المرور">
+        </label>
+        <label id="labelChangePassword" style="display: none;">
+          <span>تغيير كلمة المرور (اختياري)</span>
+          <input type="password" name="changePassword" id="changePasswordInput" placeholder="اتركها فارغة للإبقاء على الحالية" minlength="4">
+        </label>
+
+        <p class="section-title">بوابة الدفع (Moyasar)</p>
+        <label>
+          <span>مفتاح Moyasar السري (Secret Key)</span>
+          <input type="text" name="moyasarSecretKey" id="moyasarSecretKey" placeholder="sk_test_... أو sk_live_...">
+          <span class="hint">من لوحة Moyasar → الإعدادات → API Keys. اتركه فارغاً للإبقاء على المفتاح الحالي.</span>
+        </label>
+
+        <p class="section-title">بوابة الشحن</p>
+        <label>
+          <span>سعر التوصيل العادي (ريال)</span>
+          <input type="number" name="shippingStandardPrice" id="shippingStandardPrice" value="36" min="0" step="1">
+        </label>
+        <label>
+          <span>سعر التوصيل السريع (ريال)</span>
+          <input type="number" name="shippingExpressPrice" id="shippingExpressPrice" value="41" min="0" step="1">
+        </label>
+
+        <p class="section-title">عنوان الموقع و Google</p>
+        <label>
+          <span>عنوان الموقع (رابط المتجر)</span>
+          <input type="url" name="baseUrl" id="baseUrl" placeholder="https://your-store.com أو http://localhost:3000">
+          <span class="hint">الرابط الذي يفتح به المتجر. يُستخدم لعودة العميل بعد الدفع (Moyasar) وللروابط في الإشعارات. على جهازك للتجربة: <strong>http://localhost:3000</strong> — بعد الرفع على الإنترنت: ضع رابط موقعك الحقيقي (مثل https://hayat-store.onrender.com). لا تضف / في النهاية.</span>
+        </label>
+        <label>
+          <span>معرف Google Analytics (اختياري)</span>
+          <input type="text" name="googleAnalyticsId" id="googleAnalyticsId" placeholder="G-XXXXXXXXXX">
+          <span class="hint">لإحصائيات الزيارات: من <a href="https://analytics.google.com" target="_blank" rel="noopener">Google Analytics</a> → الإدارة → تدفق البيانات → اختر الموقع → معرّف القياس (يبدأ بـ G-). اتركه فارغاً إن لم تستخدم Analytics.</span>
+        </label>
+        <label>
+          <span>تحقق ملكية الموقع في Google (اختياري)</span>
+          <input type="text" name="googleSiteVerification" id="googleSiteVerification" placeholder="رمز التحقق من Search Console">
+          <span class="hint">من <a href="https://search.google.com/search-console" target="_blank" rel="noopener">Google Search Console</a> → إضافة موقع → طريقة "علامة HTML" → انسخ قيمة content فقط (الأحرف بين علامتي التنصيص).</span>
+        </label>
+
+        <div class="msg" id="formMsg"></div>
+        <button type="submit">حفظ الإعدادات</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      var form = document.getElementById('adminForm');
+      var labelNew = document.getElementById('labelNewPassword');
+      var labelLogin = document.getElementById('labelLogin');
+      var labelPass = document.getElementById('labelPassword');
+      var labelChangePass = document.getElementById('labelChangePassword');
+      var newPass = document.getElementById('newPassword');
+      var password = document.getElementById('password');
+      var username = document.getElementById('username');
+      var msg = document.getElementById('formMsg');
+
+      function showMsg(text, isError) {
+        msg.textContent = text;
+        msg.className = 'msg ' + (isError ? 'error' : 'success');
+      }
+
+      fetch('/api/admin/status')
+        .then(function(r) { return r.json(); })
+        .then(function(s) {
+          if (s.hasConfig) {
+            labelLogin.style.display = 'block';
+            labelPass.style.display = 'block';
+            labelChangePass.style.display = 'block';
+            username.value = s.adminUsername || 'HASSAN.1949';
+            document.getElementById('shippingStandardPrice').value = s.shippingStandardPrice ?? 36;
+            document.getElementById('shippingExpressPrice').value = s.shippingExpressPrice ?? 41;
+            document.getElementById('googleAnalyticsId').value = s.googleAnalyticsId || '';
+            document.getElementById('googleSiteVerification').value = s.googleSiteVerification || '';
+            document.getElementById('baseUrl').value = s.baseUrl || '';
+          } else {
+            labelNew.style.display = 'block';
+            document.getElementById('shippingStandardPrice').value = 36;
+            document.getElementById('shippingExpressPrice').value = 41;
+          }
+        })
+        .catch(function() {
+          labelNew.style.display = 'block';
+          showMsg('لا يمكن الاتصال بالسيرفر. شغّل المتجر أولاً (تشغيل المتجر.bat).', true);
+        });
+
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var payload = {
+          shippingStandardPrice: document.getElementById('shippingStandardPrice').value,
+          shippingExpressPrice: document.getElementById('shippingExpressPrice').value,
+          googleAnalyticsId: document.getElementById('googleAnalyticsId').value,
+          googleSiteVerification: document.getElementById('googleSiteVerification').value.trim() || undefined,
+          baseUrl: document.getElementById('baseUrl').value
+        };
+        var keyVal = document.getElementById('moyasarSecretKey').value.trim();
+        if (keyVal) payload.moyasarSecretKey = keyVal;
+        if (labelPass.style.display !== 'none') {
+          payload.username = username.value.trim();
+          payload.password = password.value;
+          if (!payload.username || !payload.password) {
+            showMsg('أدخل اسم المستخدم وكلمة المرور', true);
+            return;
+          }
+          var np = document.getElementById('changePasswordInput');
+          if (np && np.value.trim().length >= 4) payload.newPassword = np.value.trim();
+        } else {
+          payload.newPassword = newPass.value;
+          if (!payload.newPassword || payload.newPassword.length < 4) {
+            showMsg('اختر كلمة مرور للإعدادات (4 أحرف على الأقل)', true);
+            return;
+          }
+        }
+
+        msg.className = 'msg';
+        msg.textContent = 'جاري الحفظ...';
+
+        fetch('/api/admin/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        })
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (data.success) {
+              showMsg(data.message || 'تم حفظ الإعدادات');
+              if (payload.newPassword && labelNew.style.display !== 'none') {
+                labelNew.style.display = 'none';
+                newPass.value = '';
+                labelLogin.style.display = 'block';
+                labelPass.style.display = 'block';
+                labelChangePass.style.display = 'block';
+                username.value = 'HASSAN.1949';
+              }
+              password.value = '';
+              if (document.getElementById('changePasswordInput')) document.getElementById('changePasswordInput').value = '';
+            } else {
+              showMsg(data.message || 'فشل الحفظ', true);
+            }
+          })
+          .catch(function() {
+            showMsg('تعذر الاتصال بالسيرفر', true);
+          });
+      });
+    })();
+  </script>
+</body>
+</html>
