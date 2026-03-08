@@ -55,23 +55,38 @@ function renderProducts() {
     var finalPrice = discountP > 0 ? Math.round(price * (100 - discountP) / 100) : price;
     var qtyMax = Math.min(10, (p.quantity != null ? p.quantity : 999));
     var longDesc = formatLongDesc(p.longDescription);
-    return '<article class="plan-card product-card ' + (p.planClass || '') + '">' +
+    var simLabel = p.desc && p.desc.trim() ? p.desc : 'شريحة بيانات STC لا محدود بدون استخدام عادل';
+    return '<article class="plan-card product-card product-card-modern ' + (p.planClass || '') + '" data-id="' + p.id + '">' +
       '<div class="product-image-wrap"><img src="' + escapeHtml(p.image || 'plan-monthly.png') + '" alt="' + escapeHtml(p.title) + '" class="product-image"></div>' +
-      '<span class="product-badge plan-badge">' + escapeHtml(p.period || p.title) + '</span>' +
-      '<h3 class="product-title">' + escapeHtml(p.title) + '</h3>' +
-      '<p class="product-desc">' + escapeHtml(p.desc || '') + '</p>' +
-      '<div class="product-price-wrap">' +
-        (discountP > 0 ? '<span class="product-price-old">' + price + ' ر.س</span> ' : '') +
-        '<span class="product-price">' + finalPrice + ' ر.س</span>' +
-        (discountP > 0 ? ' <span class="product-discount-badge">خصم ' + discountP + '%</span>' : '') +
+      '<div class="product-sim-badge">' +
+        '<span class="product-sim-icon" aria-hidden="true"></span>' +
+        '<span class="product-sim-text">' + escapeHtml(simLabel) + '</span>' +
       '</div>' +
-      '<label class="product-qty-label"><span>الكمية</span><select class="product-qty-select" data-id="' + p.id + '">' +
-        Array.from({ length: qtyMax }, function(_, i) { return '<option value="' + (i + 1) + '">' + (i + 1) + '</option>'; }).join('') +
-      '</select></label>' +
-      (longDesc ? '<div class="product-data-block"><strong>بيانات المنتج</strong><div class="product-data-content">' + longDesc + '</div></div>' : '') +
+      '<div class="product-price-box">' +
+        '<span class="product-period">' + escapeHtml(p.period || p.title) + '</span>' +
+        (discountP > 0 ? '<span class="product-price-old">' + price + ' ر.س</span>' : '') +
+        '<span class="product-price">' + finalPrice + ' <small>ر.س</small></span>' +
+        (discountP > 0 ? '<span class="product-discount-badge">−' + discountP + '%</span>' : '') +
+      '</div>' +
+      '<div class="product-options-box">' +
+        '<label class="product-qty-label"><span>الكمية</span><select class="product-qty-select" data-id="' + p.id + '">' +
+          Array.from({ length: qtyMax }, function(_, i) { return '<option value="' + (i + 1) + '">' + (i + 1) + '</option>'; }).join('') +
+        '</select></label>' +
+      '</div>' +
+      (longDesc ? '<div class="product-data-box"><button type="button" class="product-data-toggle" aria-expanded="false"><span>بيانات المنتج</span><span class="toggle-icon">▼</span></button><div class="product-data-content">' + longDesc + '</div></div>' : '') +
       '<button type="button" class="add-to-cart-btn" data-id="' + p.id + '">أضف إلى السلة</button>' +
     '</article>';
   }).join('');
+
+  productsGrid.querySelectorAll('.product-data-toggle').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var content = this.nextElementSibling;
+      var open = this.getAttribute('aria-expanded') === 'true';
+      this.setAttribute('aria-expanded', !open);
+      if (content) content.classList.toggle('open', !open);
+      this.querySelector('.toggle-icon').textContent = open ? '▼' : '▲';
+    });
+  });
 
   productsGrid.querySelectorAll('.add-to-cart-btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
