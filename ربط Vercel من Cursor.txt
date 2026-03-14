@@ -1,0 +1,14 @@
+ربط Vercel من هنا في Cursor
+================================
+
+1. افتح الطرفية: Terminal → New Terminal  (أو Ctrl+`)
+
+2. نفّذ بالترتيب:
+
+   npm install
+   npx vercel login    ← يطلب منك تسجيل الدخول
+   npx vercel link     ← يربط المشروع بحسابك
+
+3. بعد الربط: npm run vercel  أو  npm run vercel:deploy  للرفع.
+
+تفاصيل أكثر: .cursor\ربط Vercel من Cursor.md

@@ -270,7 +270,9 @@ checkoutForm.addEventListener('submit', async function(e) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
-    var result = await res.json();
+    var result = {};
+    try { result = await res.json(); } catch (e) { result = { success: false, message: 'استجابة غير صحيحة من الخادم' }; }
+    if (!res.ok && !result.message) result.message = 'حدث خطأ. تأكد من الاتصال ثم حاول مرة أخرى.';
 
     if (result.success && result.paymentRequired && result.orderId && storeConfig.paymentGateway === 'moyasar') {
       var payRes = await fetch('/api/create-payment', {

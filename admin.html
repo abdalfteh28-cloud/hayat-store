@@ -73,18 +73,48 @@
     .admin-product-card .more-btn:hover { background: rgba(0,212,170,0.15); border-color: var(--admin-primary); }
     .admin-product-card .more-btn.danger:hover { background: rgba(248,81,73,0.15); border-color: #f85149; color: #f85149; }
     .admin-product-card .more-stats { font-size: 0.85rem; color: var(--admin-muted); margin-bottom: 0.5rem; }
+    .orders-toolbar { margin-bottom: 1rem; }
+    .orders-toolbar label span { display: block; margin-bottom: 0.25rem; color: var(--admin-muted); font-size: 0.85rem; }
+    .admin-select { padding: 0.5rem 0.75rem; background: var(--admin-bg); border: 1px solid var(--admin-border); border-radius: 8px; color: var(--admin-text); font-family: var(--font); min-width: 160px; }
+    .wa-btn { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.6rem; font-size: 0.8rem; background: #25d366; color: #fff; border: none; border-radius: 6px; cursor: pointer; text-decoration: none; font-family: var(--font); font-weight: 600; }
+    .wa-btn:hover { background: #20bd5a; color: #fff; }
+    .reports-summary { background: var(--admin-surface); border: 1px solid var(--admin-border); border-radius: 10px; padding: 1.25rem; margin-top: 1rem; font-size: 0.9rem; }
+    .reports-summary h4 { color: var(--admin-primary); margin-bottom: 0.75rem; }
+    .inventory-list { display: flex; flex-direction: column; gap: 0.75rem; }
+    .inventory-item { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; padding: 1rem; background: var(--admin-surface); border: 1px solid var(--admin-border); border-radius: 10px; }
+    .inventory-item.low { border-color: #f59e0b; background: rgba(245,158,11,0.08); }
+    .inventory-item .qty { font-size: 1.25rem; font-weight: 800; color: var(--admin-primary); }
+    .inventory-item.low .qty { color: #f59e0b; }
+    .admin-nav a.whatsapp-link { background: rgba(37,211,102,0.15); color: #25d366; border-color: #25d366; }
+    .admin-nav a.whatsapp-link:hover { background: rgba(37,211,102,0.25); }
+    .carrier-block label { margin-bottom: 0.5rem; }
+    .carrier-block label span { display: block; margin-bottom: 0.2rem; font-size: 0.85rem; color: var(--admin-muted); }
+    .carrier-enable { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; font-weight: 600; }
+    .carrier-enable input { width: auto; }
     @media (max-width: 768px) { .admin-layout { flex-direction: column; } .admin-sidebar { width: 100%; border-left: none; border-bottom: 1px solid var(--admin-border); } .admin-nav { flex-direction: row; flex-wrap: wrap; } }
   </style>
 </head>
 <body>
   <div id="loginScreen" class="login-wrap">
     <h2>تسجيل الدخول — لوحة التحكم</h2>
-    <form id="loginForm">
-      <label><span>اسم المستخدم</span><input type="text" id="adminUser" required placeholder="HASSAN.1949"></label>
-      <label><span>كلمة المرور</span><input type="password" id="adminPass" required></label>
-      <button type="submit">دخول</button>
-      <p id="loginError" class="login-error" style="display:none;"></p>
-    </form>
+    <div id="loginStep1">
+      <p style="color:var(--admin-muted); font-size:0.9rem; margin-bottom:1rem;">أدخل اسم المستخدم وكلمة المرور، ثم سيُرسل كود إلى جوالك لإكمال الدخول.</p>
+      <form id="loginForm">
+        <label><span>اسم المستخدم</span><input type="text" id="adminUser" required placeholder="HASSAN.1949"></label>
+        <label><span>كلمة المرور</span><input type="password" id="adminPass" required></label>
+        <button type="submit">إرسال الكود إلى جوالك</button>
+        <p id="loginError" class="login-error" style="display:none;"></p>
+      </form>
+    </div>
+    <div id="loginStep2" style="display:none;">
+      <p style="color:var(--admin-muted); font-size:0.9rem; margin-bottom:1rem;">أدخل الكود المُرسل إلى جوالك (صلاحية 5 دقائق).</p>
+      <form id="otpForm">
+        <label><span>كود الدخول (6 أرقام)</span><input type="text" id="adminOtp" required placeholder="123456" maxlength="6" pattern="[0-9]*" inputmode="numeric" dir="ltr" style="text-align:center; font-size:1.25rem; letter-spacing:0.3em;"></label>
+        <button type="submit">تأكيد والدخول</button>
+        <p id="otpError" class="login-error" style="display:none;"></p>
+      </form>
+      <p style="margin-top:0.75rem;"><button type="button" id="otpBackBtn" class="back" style="background:none; border:none; cursor:pointer; font-size:0.9rem;">← إلغاء وإعادة المحاولة</button></p>
+    </div>
     <p style="margin-top:1rem;"><a href="/" class="back">← العودة للمتجر</a></p>
   </div>
 
@@ -93,8 +123,12 @@
       <h2>لوحة التحكم</h2>
       <nav class="admin-nav">
         <a href="/" target="_blank" rel="noopener" class="admin-nav-link visit-store">🏪 زيارة المتجر</a>
+        <a href="#" id="sidebarWhatsapp" target="_blank" rel="noopener" class="admin-nav-link visit-store whatsapp-link" style="margin-top:0.25rem;">📱 واتساب المتجر</a>
         <a href="#" class="admin-nav-link active" data-panel="products">📦 المنتجات</a>
         <a href="#" class="admin-nav-link" data-panel="orders">📋 الطلبات وبيانات العملاء</a>
+        <a href="#" class="admin-nav-link" data-panel="reports">📊 التقارير</a>
+        <a href="#" class="admin-nav-link" data-panel="customers">👥 العملاء</a>
+        <a href="#" class="admin-nav-link" data-panel="inventory">📦 المخزون</a>
         <a href="#" class="admin-nav-link" data-panel="support">💬 رسائل الدعم الفني</a>
         <a href="#" class="admin-nav-link" data-panel="config">⚙️ إعدادات المتجر</a>
       </nav>
@@ -112,13 +146,48 @@
       <div id="panelOrders" class="admin-panel">
         <div class="admin-header"><h1>الطلبات وبيانات العملاء</h1></div>
         <div class="stat-cards" id="ordersStats"></div>
+        <div class="orders-toolbar">
+          <label><span>تصفية الحالة</span>
+            <select id="ordersFilterStatus" class="admin-select">
+              <option value="">كل الحالات</option>
+              <option value="paid">مدفوع</option>
+              <option value="confirmed">مؤكد</option>
+              <option value="pending_payment">بانتظار الدفع</option>
+            </select>
+          </label>
+        </div>
         <div style="overflow-x:auto;">
           <table class="orders-table" id="ordersTable">
-            <thead><tr><th>#</th><th>التاريخ</th><th>العميل</th><th>الجوال</th><th>العنوان</th><th>المبلغ</th><th>الحالة</th></tr></thead>
+            <thead><tr><th>#</th><th>التاريخ</th><th>العميل</th><th>الجوال</th><th>العنوان</th><th>المبلغ</th><th>الحالة</th><th>واتساب</th></tr></thead>
             <tbody id="ordersBody"></tbody>
           </table>
         </div>
         <p id="ordersEmpty" style="display:none; text-align:center; color:var(--admin-muted); padding:2rem;">لا توجد طلبات بعد.</p>
+      </div>
+
+      <div id="panelReports" class="admin-panel">
+        <div class="admin-header"><h1>التقارير</h1></div>
+        <p style="color:var(--admin-muted); margin-bottom:1rem;">ملخص المبيعات والطلبات حسب الفترة.</p>
+        <div class="stat-cards" id="reportsStats"></div>
+        <div id="reportsSummary" class="reports-summary"></div>
+      </div>
+
+      <div id="panelCustomers" class="admin-panel">
+        <div class="admin-header"><h1>العملاء</h1></div>
+        <p style="color:var(--admin-muted); margin-bottom:1rem;">قائمة العملاء من الطلبات — عدد الطلبات وإجمالي المشتريات.</p>
+        <div style="overflow-x:auto;">
+          <table class="orders-table" id="customersTable">
+            <thead><tr><th>الاسم</th><th>الجوال</th><th>عدد الطلبات</th><th>إجمالي المشتريات</th><th>واتساب</th></tr></thead>
+            <tbody id="customersBody"></tbody>
+          </table>
+        </div>
+        <p id="customersEmpty" style="display:none; text-align:center; color:var(--admin-muted); padding:2rem;">لا يوجد عملاء مسجلون بعد.</p>
+      </div>
+
+      <div id="panelInventory" class="admin-panel">
+        <div class="admin-header"><h1>المخزون</h1></div>
+        <p style="color:var(--admin-muted); margin-bottom:1rem;">كميات المنتجات وتنبيه نقص المخزون. التعديل من قسم المنتجات.</p>
+        <div class="inventory-list" id="inventoryList"></div>
       </div>
 
       <div id="panelSupport" class="admin-panel">
@@ -135,7 +204,40 @@
           <label><span>مفتاح Moyasar السري</span><input type="password" id="configMoyasar" placeholder="sk_live_... أو sk_test_..."></label>
           <label><span>سعر الشحن العادي (ر.س)</span><input type="number" id="configShipStd" min="0" value="36"></label>
           <label><span>سعر الشحن السريع (ر.س)</span><input type="number" id="configShipExpress" min="0" value="41"></label>
+
+          <details class="shipping-carriers-details" style="margin:1.25rem 0; padding:1rem; background:var(--admin-surface); border:1px solid var(--admin-border); border-radius:10px;">
+            <summary style="cursor:pointer; font-weight:700; color:var(--admin-primary);">📦 بوابات الشحن (أرامكس، إم إس إم إس، DHL، ريد بوكس)</summary>
+            <p style="font-size:0.85rem; color:var(--admin-muted); margin:0.5rem 0 1rem;">فعّل الشركات وأدخل بيانات الحساب من كل شركة. خياراتها ستظهر للعميل مع التوصيل العادي والسريع.</p>
+            <div class="carrier-block" style="margin-bottom:1.25rem;">
+              <label class="carrier-enable"><input type="checkbox" id="carrier_aramex_enabled"> تفعيل أرامكس</label>
+              <label><span>اسم المستخدم</span><input type="text" id="carrier_aramex_username" placeholder="Username"></label>
+              <label><span>كلمة المرور</span><input type="password" id="carrier_aramex_password" placeholder="Password"></label>
+              <label><span>رقم الحساب</span><input type="text" id="carrier_aramex_accountNumber" placeholder="Account Number"></label>
+              <label><span>Account PIN</span><input type="text" id="carrier_aramex_accountPin" placeholder="PIN"></label>
+              <label><span>Account Entity</span><input type="text" id="carrier_aramex_accountEntity" placeholder="SAU"></label>
+            </div>
+            <div class="carrier-block" style="margin-bottom:1.25rem;">
+              <label class="carrier-enable"><input type="checkbox" id="carrier_smsa_enabled"> تفعيل إم إس إم إس</label>
+              <label><span>API Key</span><input type="text" id="carrier_smsa_apiKey" placeholder="API Key من SMSA"></label>
+              <label><span>رقم الحساب</span><input type="text" id="carrier_smsa_accountNumber" placeholder="Account Number"></label>
+              <label><span>Pass Key</span><input type="password" id="carrier_smsa_passKey" placeholder="Pass Key"></label>
+            </div>
+            <div class="carrier-block" style="margin-bottom:1.25rem;">
+              <label class="carrier-enable"><input type="checkbox" id="carrier_dhl_enabled"> تفعيل DHL</label>
+              <label><span>API Key</span><input type="text" id="carrier_dhl_apiKey" placeholder="MyDHL API Key"></label>
+              <label><span>رقم الحساب</span><input type="text" id="carrier_dhl_accountNumber" placeholder="Account Number"></label>
+            </div>
+            <div class="carrier-block">
+              <label class="carrier-enable"><input type="checkbox" id="carrier_redbox_enabled"> تفعيل ريد بوكس</label>
+              <label><span>API Key</span><input type="text" id="carrier_redbox_apiKey" placeholder="API Key"></label>
+              <label><span>معرف التاجر (Merchant ID)</span><input type="text" id="carrier_redbox_merchantId" placeholder="Merchant ID"></label>
+            </div>
+          </details>
+
           <label><span>معرف Google Analytics (اختياري)</span><input type="text" id="configGA" placeholder="G-XXXXXXXXXX"></label>
+          <label><span>رقم واتساب المتجر (للتواصل والإشعارات)</span><input type="text" id="configWhatsapp" placeholder="0506323309" dir="ltr"></label>
+          <label><span>جوال استلام كود الدخول (OTP)</span><input type="text" id="configAdminPhone" placeholder="0506323309" dir="ltr"><span class="hint" style="font-size:0.8rem; color:var(--admin-muted);">يُرسل إليه كود الدخول عند تسجيل الدخول للوحة التحكم.</span></label>
+          <label><span>رابط إرسال الكود (Webhook — اختياري)</span><input type="url" id="configOtpWebhook" placeholder="https://..." dir="ltr"><span class="hint" style="font-size:0.8rem; color:var(--admin-muted);">إذا وُجد، يُرسل له طلب POST يحتوي phone و code و message لربط بوت واتساب أو خدمة SMS.</span></label>
           <label><span>كوبونات الخصم (JSON مصفوفة، مثال: [{"code":"SAVE10","type":"percent","value":10}])</span><textarea id="configCoupons" rows="3" placeholder='[{"code":"SAVE10","type":"percent","value":10}]'></textarea></label>
           <label><span>كلمة مرور جديدة (اتركها فارغة للإبقاء)</span><input type="password" id="configNewPass"></label>
           <button type="submit">حفظ الإعدادات</button>
@@ -158,19 +260,48 @@
 
   loginForm.addEventListener('submit', async function(e) {
     e.preventDefault();
-    const username = document.getElementById('adminUser').value.trim();
-    const password = document.getElementById('adminPass').value;
+    var username = document.getElementById('adminUser').value.trim();
+    var password = document.getElementById('adminPass').value;
     loginError.style.display = 'none';
-    const res = await fetch('/api/admin/orders', { headers: { 'Authorization': 'Basic ' + b64(username + ':' + password) } });
-    const data = await res.json();
+    var res = await fetch('/api/admin/login-request', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: username, password: password }) });
+    var data = await res.json();
     if (data.success) {
-      adminAuth = { username, password };
-      loginScreen.style.display = 'none';
-      dashboardScreen.style.display = 'flex';
-      loadOrders(); loadConfig(); loadProducts(); loadSupport();
+      window._loginUsername = username;
+      window._loginPassword = password;
+      document.getElementById('loginStep1').style.display = 'none';
+      document.getElementById('loginStep2').style.display = 'block';
+      document.getElementById('adminOtp').value = '';
+      document.getElementById('adminOtp').focus();
     } else {
       loginError.textContent = data.message || 'اسم المستخدم أو كلمة المرور غير صحيحة';
       loginError.style.display = 'block';
+    }
+  });
+
+  document.getElementById('otpBackBtn').addEventListener('click', function() {
+    document.getElementById('loginStep2').style.display = 'none';
+    document.getElementById('loginStep1').style.display = 'block';
+    document.getElementById('otpError').style.display = 'none';
+  });
+
+  document.getElementById('otpForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    var code = document.getElementById('adminOtp').value.trim();
+    var username = window._loginUsername;
+    var password = window._loginPassword;
+    document.getElementById('otpError').style.display = 'none';
+    var res = await fetch('/api/admin/login-verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: username, password: password, code: code }) });
+    var data = await res.json();
+    if (data.success) {
+      adminAuth = { username: username, password: password };
+      loginScreen.style.display = 'none';
+      dashboardScreen.style.display = 'flex';
+      window._loginUsername = '';
+      window._loginPassword = '';
+      loadOrders(); loadConfig(); loadProducts(); loadSupport();
+    } else {
+      document.getElementById('otpError').textContent = data.message || 'الكود غير صحيح';
+      document.getElementById('otpError').style.display = 'block';
     }
   });
 
@@ -183,9 +314,21 @@
       if (p) p.classList.add('active');
       if (this.getAttribute('data-panel') === 'products') loadProducts();
       if (this.getAttribute('data-panel') === 'orders') loadOrders();
+      if (this.getAttribute('data-panel') === 'reports') loadReports();
+      if (this.getAttribute('data-panel') === 'customers') loadCustomers();
+      if (this.getAttribute('data-panel') === 'inventory') loadInventory();
       if (this.getAttribute('data-panel') === 'support') loadSupport();
     });
   });
+
+  function waNumber(phone) {
+    var d = (phone || '').replace(/\D/g, '');
+    if (d.length <= 9 && d.charAt(0) === '5') d = '966' + d;
+    else if (d.length === 10 && d.charAt(0) === '0') d = '966' + d.slice(1);
+    else if (d.length < 10) d = '966' + d;
+    return d || '966506323309';
+  }
+  function waLink(phone) { return 'https://wa.me/' + waNumber(phone); }
 
   var adminProducts = [];
   var baseUrlStore = '';
@@ -311,15 +454,18 @@
     } else alert(data.message || 'فشل الحفظ');
   });
 
+  var allOrdersCache = [];
   async function loadOrders() {
     const res = await fetch('/api/admin/orders', { headers: authHeader() });
     const data = await res.json();
     if (!data.success) return;
-    const orders = data.orders || [];
+    allOrdersCache = data.orders || [];
+    var filter = (document.getElementById('ordersFilterStatus') || {}).value;
+    var orders = filter ? allOrdersCache.filter(function(o) { return (o.status || '') === filter; }) : allOrdersCache;
     var rev = 0, paid = 0;
-    orders.forEach(function(o) { rev += o.total || 0; if (o.status === 'paid' || o.status === 'confirmed') paid++; });
+    allOrdersCache.forEach(function(o) { rev += o.total || 0; if (o.status === 'paid' || o.status === 'confirmed') paid++; });
     document.getElementById('ordersStats').innerHTML =
-      '<div class="stat-card"><span class="n">' + orders.length + '</span><span class="l">إجمالي الطلبات</span></div>' +
+      '<div class="stat-card"><span class="n">' + allOrdersCache.length + '</span><span class="l">إجمالي الطلبات</span></div>' +
       '<div class="stat-card"><span class="n">' + paid + '</span><span class="l">مؤكدة / مدفوعة</span></div>' +
       '<div class="stat-card"><span class="n">' + Math.round(rev) + ' ر.س</span><span class="l">إجمالي المبيعات</span></div>';
     var tbody = document.getElementById('ordersBody');
@@ -328,8 +474,72 @@
       var st = o.status === 'paid' ? 'مدفوع' : o.status === 'confirmed' ? 'مؤكد' : o.status === 'pending_payment' ? 'بانتظار الدفع' : o.status || '-';
       var sc = (o.status || '').replace(/\s/g, '_');
       var date = o.date ? new Date(o.date).toLocaleDateString('ar-SA') : '-';
-      return '<tr><td>' + o.id + '</td><td>' + date + '</td><td>' + (o.name || '-') + '</td><td>' + (o.phone || '-') + '</td><td>' + (o.address || '-') + '</td><td>' + (o.total || 0) + ' ر.س</td><td><span class="os ' + sc + '">' + st + '</span></td></tr>';
+      var wa = (o.phone || '').trim() ? '<a href="' + waLink(o.phone) + '" target="_blank" rel="noopener" class="wa-btn">واتساب</a>' : '-';
+      return '<tr><td>' + o.id + '</td><td>' + date + '</td><td>' + (o.name || '-') + '</td><td>' + (o.phone || '-') + '</td><td>' + (o.address || '-') + '</td><td>' + (o.total || 0) + ' ر.س</td><td><span class="os ' + sc + '">' + st + '</span></td><td>' + wa + '</td></tr>';
     }).join('') : '';
+  }
+  var ordersFilterEl = document.getElementById('ordersFilterStatus');
+  if (ordersFilterEl) ordersFilterEl.addEventListener('change', loadOrders);
+
+  async function loadReports() {
+    const res = await fetch('/api/admin/orders', { headers: authHeader() });
+    const data = await res.json();
+    if (!data.success) return;
+    var orders = data.orders || [];
+    var now = new Date();
+    var todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    var weekStart = todayStart - 7 * 24 * 60 * 60 * 1000;
+    var monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+    var today = orders.filter(function(o) { var t = new Date(o.date).getTime(); return t >= todayStart; });
+    var week = orders.filter(function(o) { var t = new Date(o.date).getTime(); return t >= weekStart; });
+    var month = orders.filter(function(o) { var t = new Date(o.date).getTime(); return t >= monthStart; });
+    function sum(arr) { return arr.reduce(function(s, o) { return s + (o.total || 0); }, 0); }
+    document.getElementById('reportsStats').innerHTML =
+      '<div class="stat-card"><span class="n">' + today.length + '</span><span class="l">طلبات اليوم</span></div>' +
+      '<div class="stat-card"><span class="n">' + Math.round(sum(today)) + ' ر.س</span><span class="l">مبيعات اليوم</span></div>' +
+      '<div class="stat-card"><span class="n">' + week.length + '</span><span class="l">طلبات آخر 7 أيام</span></div>' +
+      '<div class="stat-card"><span class="n">' + Math.round(sum(week)) + ' ر.س</span><span class="l">مبيعات آخر 7 أيام</span></div>' +
+      '<div class="stat-card"><span class="n">' + month.length + '</span><span class="l">طلبات الشهر</span></div>' +
+      '<div class="stat-card"><span class="n">' + Math.round(sum(month)) + ' ر.س</span><span class="l">مبيعات الشهر</span></div>';
+    document.getElementById('reportsSummary').innerHTML = '<h4>ملخص</h4><p>إجمالي الطلبات: ' + orders.length + ' — إجمالي المبيعات: ' + Math.round(orders.reduce(function(s, o) { return s + (o.total || 0); }, 0)) + ' ر.س</p>';
+  }
+
+  async function loadCustomers() {
+    const res = await fetch('/api/admin/orders', { headers: authHeader() });
+    const data = await res.json();
+    if (!data.success) return;
+    var orders = data.orders || [];
+    var byPhone = {};
+    orders.forEach(function(o) {
+      var key = (o.phone || '').trim() || 'unknown-' + o.id;
+      if (!byPhone[key]) byPhone[key] = { name: o.name || '-', phone: o.phone || '-', count: 0, total: 0 };
+      byPhone[key].count += 1;
+      byPhone[key].total += o.total || 0;
+    });
+    var list = Object.keys(byPhone).filter(function(k) { return k.indexOf('unknown') !== 0; }).map(function(k) { return byPhone[k]; });
+    var tbody = document.getElementById('customersBody');
+    document.getElementById('customersEmpty').style.display = list.length ? 'none' : 'block';
+    tbody.innerHTML = list.length ? list.map(function(c) {
+      var wa = (c.phone || '').trim() ? '<a href="' + waLink(c.phone) + '" target="_blank" rel="noopener" class="wa-btn">واتساب</a>' : '-';
+      return '<tr><td>' + (c.name || '-') + '</td><td>' + (c.phone || '-') + '</td><td>' + c.count + '</td><td>' + Math.round(c.total) + ' ر.س</td><td>' + wa + '</td></tr>';
+    }).join('') : '';
+  }
+
+  async function loadInventory() {
+    const res = await fetch('/api/admin/products', { headers: authHeader() });
+    const data = await res.json();
+    if (!data.success || !data.products) return;
+    var products = data.products || [];
+    var lowThreshold = 10;
+    var html = products.map(function(p) {
+      var q = parseInt(p.quantity, 10) || 0;
+      var low = q < lowThreshold;
+      return '<div class="inventory-item' + (low ? ' low' : '') + '">' +
+        '<div><strong>' + (p.title || p.period || 'منتج') + '</strong><span style="color:var(--admin-muted); margin-right:0.5rem;"> — ' + (p.desc || '').slice(0, 40) + '</span></div>' +
+        '<div><span class="qty">' + q + '</span> وحدة' + (low ? ' <span style="color:#f59e0b; font-size:0.85rem;">(تنبيه نقص)</span>' : '') + '</div>' +
+        '</div>';
+    }).join('');
+    document.getElementById('inventoryList').innerHTML = html || '<p style="color:var(--admin-muted);">لا توجد منتجات.</p>';
   }
 
   async function loadSupport() {
@@ -352,6 +562,44 @@
     document.getElementById('configShipExpress').value = c.shippingExpressPrice != null ? c.shippingExpressPrice : 41;
     document.getElementById('configGA').value = c.googleAnalyticsId || '';
     document.getElementById('configCoupons').value = Array.isArray(c.coupons) && c.coupons.length ? JSON.stringify(c.coupons, null, 2) : '[]';
+    var wp = (c.whatsappPhone || '0506323309').replace(/\D/g, '');
+    if (wp.length === 9 && wp.charAt(0) === '5') wp = '0' + wp;
+    else if (wp.length === 12 && wp.slice(0, 3) === '966') wp = '0' + wp.slice(3);
+    document.getElementById('configWhatsapp').value = wp || '0506323309';
+    var ap = (c.adminPhone || '').replace(/\D/g, '');
+    if (ap.length === 9 && ap.charAt(0) === '5') ap = '0' + ap;
+    else if (ap.length === 12 && ap.slice(0, 3) === '966') ap = '0' + ap.slice(3);
+    var configAdminPhoneEl = document.getElementById('configAdminPhone');
+    if (configAdminPhoneEl) configAdminPhoneEl.value = ap || '0506323309';
+    var configOtpWebhookEl = document.getElementById('configOtpWebhook');
+    if (configOtpWebhookEl) configOtpWebhookEl.value = c.otpWebhookUrl || '';
+    var sidebarWa = document.getElementById('sidebarWhatsapp');
+    if (sidebarWa) sidebarWa.href = waLink(c.whatsappPhone || '0506323309');
+    var sc = c.shippingCarriers || {};
+    ['aramex','smsa','dhl','redbox'].forEach(function(carrier) {
+      var pre = sc[carrier] || {};
+      var en = document.getElementById('carrier_' + carrier + '_enabled');
+      if (en) en.checked = !!pre.enabled;
+      var fields = carrier === 'aramex' ? ['username','password','accountNumber','accountPin','accountEntity'] : carrier === 'smsa' ? ['apiKey','accountNumber','passKey'] : carrier === 'dhl' ? ['apiKey','accountNumber'] : ['apiKey','merchantId'];
+      fields.forEach(function(f) {
+        var el = document.getElementById('carrier_' + carrier + '_' + f);
+        if (el) el.value = pre[f] || '';
+      });
+    });
+  }
+
+  function getShippingCarriersFromForm() {
+    var out = {};
+    ['aramex','smsa','dhl','redbox'].forEach(function(carrier) {
+      var en = document.getElementById('carrier_' + carrier + '_enabled');
+      out[carrier] = { enabled: !!(en && en.checked) };
+      var fields = carrier === 'aramex' ? ['username','password','accountNumber','accountPin','accountEntity'] : carrier === 'smsa' ? ['apiKey','accountNumber','passKey'] : carrier === 'dhl' ? ['apiKey','accountNumber'] : ['apiKey','merchantId'];
+      fields.forEach(function(f) {
+        var el = document.getElementById('carrier_' + carrier + '_' + f);
+        if (el) out[carrier][f] = (el.value || '').trim();
+      });
+    });
+    return out;
   }
 
   document.getElementById('configForm').addEventListener('submit', async function(e) {
@@ -363,6 +611,10 @@
       shippingStandardPrice: parseInt(document.getElementById('configShipStd').value, 10),
       shippingExpressPrice: parseInt(document.getElementById('configShipExpress').value, 10),
       googleAnalyticsId: document.getElementById('configGA').value.trim(),
+      whatsappPhone: document.getElementById('configWhatsapp').value.trim() || '0506323309',
+      adminPhone: document.getElementById('configAdminPhone').value.trim() || '',
+      otpWebhookUrl: document.getElementById('configOtpWebhook').value.trim() || '',
+      shippingCarriers: getShippingCarriersFromForm(),
       coupons: []
     };
     try { payload.coupons = JSON.parse(document.getElementById('configCoupons').value || '[]'); } catch (e) {}
@@ -376,6 +628,7 @@
       document.getElementById('configSaved').style.display = 'block';
       document.getElementById('configNewPass').value = '';
       setTimeout(function() { document.getElementById('configSaved').style.display = 'none'; }, 3000);
+      loadConfig();
     } else alert(data.message || 'فشل الحفظ');
   });
 })();

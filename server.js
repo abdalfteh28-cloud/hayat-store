@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
+const { getRatesFromCarriers } = require('./shipping-carriers');
 require('dotenv').config();
 
 const app = express();
@@ -26,7 +27,11 @@ function getConfig() {
     baseUrl: (c.baseUrl || process.env.BASE_URL || '').trim() || `http://localhost:${PORT}`,
     adminUsername: (c.adminUsername || 'HASSAN.1949').trim(),
     adminPasswordHash: c.adminPasswordHash || '',
-    coupons: Array.isArray(c.coupons) ? c.coupons : []
+    coupons: Array.isArray(c.coupons) ? c.coupons : [],
+    whatsappPhone: (c.whatsappPhone || '0506323309').trim().replace(/\D/g, ''),
+    shippingCarriers: c.shippingCarriers && typeof c.shippingCarriers === 'object' ? c.shippingCarriers : {},
+    adminPhone: (c.adminPhone || c.whatsappPhone || '0506323309').trim().replace(/\D/g, '') || '0506323309',
+    otpWebhookUrl: (c.otpWebhookUrl || process.env.OTP_WEBHOOK_URL || '').trim()
   };
 }
 function saveConfig(obj) {
@@ -44,6 +49,10 @@ function saveConfig(obj) {
   if (obj.googleAnalyticsId !== undefined) existing.googleAnalyticsId = obj.googleAnalyticsId;
   if (obj.baseUrl !== undefined) existing.baseUrl = obj.baseUrl;
   if (obj.coupons !== undefined) existing.coupons = obj.coupons;
+  if (obj.whatsappPhone !== undefined) existing.whatsappPhone = String(obj.whatsappPhone).trim().replace(/\D/g, '') || '0506323309';
+  if (obj.shippingCarriers !== undefined && typeof obj.shippingCarriers === 'object') existing.shippingCarriers = obj.shippingCarriers;
+  if (obj.adminPhone !== undefined) existing.adminPhone = String(obj.adminPhone).trim().replace(/\D/g, '') || '';
+  if (obj.otpWebhookUrl !== undefined) existing.otpWebhookUrl = String(obj.otpWebhookUrl).trim();
   fs.writeFileSync(CONFIG_FILE, JSON.stringify(existing, null, 2), 'utf8');
 }
 function hashPassword(pwd) {
@@ -57,9 +66,96 @@ function verifyAdmin(username, password) {
   return userOk && passOk;
 }
 
+// ─── كود الدخول (OTP) المرسل إلى جوال الأدمن ───
+const pendingOTP = {};
+const OTP_EXPIRY_MS = 5 * 60 * 1000; // 5 دقائق
+
+function generateOTP() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+function sendOTPToPhone(phone, code) {
+  const cfg = getConfig();
+  const webhook = cfg.otpWebhookUrl;
+  console.log('[متجر حياة] كود الدخول للتجربة:', code, '— الجوال:', phone);
+  if (webhook) {
+    fetch(webhook, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: phone, code: code, message: 'كود الدخول لوحة تحكم متجر حياة: ' + code })
+    }).catch(err => console.error('OTP webhook error:', err.message));
+  }
+}
+
+app.post('/api/admin/login-request', (req, res) => {
+  try {
+    const { username, password } = req.body || {};
+    if (!username || !password) {
+      return res.status(400).json({ success: false, message: 'اسم المستخدم وكلمة المرور مطلوبان' });
+    }
+    if (!verifyAdmin(username.trim(), password)) {
+      return res.status(401).json({ success: false, message: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
+    }
+    const cfg = getConfig();
+    const phone = cfg.adminPhone || cfg.whatsappPhone || '0506323309';
+    const code = generateOTP();
+    pendingOTP[username.trim()] = { code, expiresAt: Date.now() + OTP_EXPIRY_MS, password };
+    sendOTPToPhone(phone, code);
+    res.json({ success: true, message: 'تم إرسال الكود إلى جوالك. أدخل الكود خلال 5 دقائق.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'حدث خطأ' });
+  }
+});
+
+app.post('/api/admin/login-verify', (req, res) => {
+  try {
+    const { username, password, code } = req.body || {};
+    if (!username || !code) {
+      return res.status(400).json({ success: false, message: 'اسم المستخدم والكود مطلوبان' });
+    }
+    const key = username.trim();
+    const pending = pendingOTP[key];
+    if (!pending) {
+      return res.status(401).json({ success: false, message: 'لم يطلب كوداً أو انتهت صلاحية الطلب. جرّب تسجيل الدخول من جديد.' });
+    }
+    if (Date.now() > pending.expiresAt) {
+      delete pendingOTP[key];
+      return res.status(401).json({ success: false, message: 'انتهت صلاحية الكود. جرّب تسجيل الدخول من جديد.' });
+    }
+    if (pending.code !== String(code).trim()) {
+      return res.status(401).json({ success: false, message: 'الكود غير صحيح' });
+    }
+    if (!verifyAdmin(key, password || pending.password)) {
+      delete pendingOTP[key];
+      return res.status(401).json({ success: false, message: 'بيانات الدخول غير صحيحة' });
+    }
+    delete pendingOTP[key];
+    res.json({ success: true, message: 'تم تسجيل الدخول بنجاح' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'حدث خطأ' });
+  }
+});
+
 // وسطاء
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// الصفحة الرئيسية ولوحة التحكم — عرض التطبيق مباشرة عند فتح الرابط (قبل static لتفادي ظهور أكواد)
+app.get('/', (req, res) => {
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+app.get('/admin', (req, res) => {
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.sendFile(path.join(__dirname, 'admin.html'));
+});
+app.get('/admin.html', (req, res) => {
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.sendFile(path.join(__dirname, 'admin.html'));
+});
+
 app.use(express.static(__dirname));
 
 // التأكد من وجود مجلد وملف الطلبات والإعدادات الافتراضية
@@ -79,7 +175,11 @@ if (!fs.existsSync(CONFIG_FILE)) {
     baseUrl: '',
     moyasarSecretKey: '',
     googleAnalyticsId: '',
-    coupons: []
+    coupons: [],
+    whatsappPhone: '0506323309',
+    adminPhone: '0506323309',
+    otpWebhookUrl: '',
+    shippingCarriers: {}
   }, null, 2), 'utf8');
 }
 if (!fs.existsSync(PRODUCTS_FILE)) {
@@ -195,27 +295,35 @@ app.get('/api/admin/status', (req, res) => {
     shippingExpressPrice: c.shippingExpressPrice,
     googleAnalyticsId: c.googleAnalyticsId || '',
     baseUrl: c.baseUrl || '',
-    coupons: c.coupons || []
+    coupons: c.coupons || [],
+    whatsappPhone: c.whatsappPhone || '0506323309',
+    shippingCarriers: c.shippingCarriers || {},
+    adminPhone: c.adminPhone || c.whatsappPhone || '0506323309',
+    otpWebhookUrl: c.otpWebhookUrl || ''
   });
 });
 
 // ─── حفظ إعدادات المتجر (بوابة الدفع، الشحن، جوجل، تغيير كلمة المرور) ───
 app.post('/api/admin/config', (req, res) => {
   try {
-    const { username, password, newPassword, moyasarSecretKey, shippingStandardPrice, shippingExpressPrice, googleAnalyticsId, baseUrl, coupons } = req.body || {};
+    const { username, password, newPassword, moyasarSecretKey, shippingStandardPrice, shippingExpressPrice, googleAnalyticsId, baseUrl, coupons, whatsappPhone, shippingCarriers, adminPhone, otpWebhookUrl } = req.body || {};
     const c = getConfig();
 
     if (c.adminPasswordHash) {
       if (!username || !password || !verifyAdmin(username, password)) {
         return res.status(401).json({ success: false, message: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
       }
-      const toSave = {
+      const         toSave = {
         moyasarSecretKey: moyasarSecretKey !== undefined ? String(moyasarSecretKey).trim() : undefined,
         shippingStandardPrice: shippingStandardPrice !== undefined ? parseInt(shippingStandardPrice, 10) : undefined,
         shippingExpressPrice: shippingExpressPrice !== undefined ? parseInt(shippingExpressPrice, 10) : undefined,
         googleAnalyticsId: googleAnalyticsId !== undefined ? String(googleAnalyticsId).trim() : undefined,
         baseUrl: baseUrl !== undefined ? String(baseUrl).trim() : undefined,
-        coupons: coupons !== undefined ? (Array.isArray(coupons) ? coupons : []) : undefined
+        coupons: coupons !== undefined ? (Array.isArray(coupons) ? coupons : []) : undefined,
+        whatsappPhone: whatsappPhone !== undefined ? String(whatsappPhone).trim().replace(/\D/g, '') || '0506323309' : undefined,
+        shippingCarriers: shippingCarriers !== undefined && typeof shippingCarriers === 'object' ? shippingCarriers : undefined,
+        adminPhone: adminPhone !== undefined ? String(adminPhone).trim().replace(/\D/g, '') || undefined : undefined,
+        otpWebhookUrl: otpWebhookUrl !== undefined ? String(otpWebhookUrl).trim() : undefined
       };
       if (newPassword && String(newPassword).length >= 4) {
         toSave.adminPasswordHash = hashPassword(newPassword);
@@ -234,7 +342,9 @@ app.post('/api/admin/config', (req, res) => {
       shippingStandardPrice: shippingStandardPrice !== undefined ? parseInt(shippingStandardPrice, 10) : 36,
       shippingExpressPrice: shippingExpressPrice !== undefined ? parseInt(shippingExpressPrice, 10) : 41,
       googleAnalyticsId: googleAnalyticsId !== undefined ? String(googleAnalyticsId).trim() : '',
-      baseUrl: baseUrl !== undefined ? String(baseUrl).trim() : ''
+      baseUrl: baseUrl !== undefined ? String(baseUrl).trim() : '',
+      whatsappPhone: whatsappPhone !== undefined ? String(whatsappPhone).trim().replace(/\D/g, '') : '0506323309',
+      shippingCarriers: shippingCarriers !== undefined && typeof shippingCarriers === 'object' ? shippingCarriers : {}
     });
     return res.json({ success: true, message: 'تم حفظ الإعدادات' });
   } catch (err) {
@@ -243,34 +353,51 @@ app.post('/api/admin/config', (req, res) => {
   }
 });
 
-// ─── خيارات الشحن (بوابة الشحن) ───
-app.get('/api/shipping/options', (req, res) => {
+// ─── خيارات الشحن (ثابتة + شركات الشحن: أرامكس، إم إس إم إس، DHL، ريد بوكس) ───
+app.get('/api/shipping/options', async (req, res) => {
   try {
     const c = getConfig();
-    const options = [
-      { id: 'standard', label: 'توصيل عادي', labelEn: 'Standard', price: c.shippingStandardPrice, days: '2-4 أيام' },
-      { id: 'express', label: 'توصيل سريع', labelEn: 'Express', price: c.shippingExpressPrice, days: '1-2 يوم' }
-    ];
+    const weight = parseFloat(req.query.weight) || 0.5;
+    const city = (req.query.city || '').trim();
+    const options = await getRatesFromCarriers(c, { weight, city });
     res.json({ success: true, options });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ success: false, message: 'حدث خطأ' });
   }
 });
 
-// ─── إنشاء الطلب ───
+// ─── إنشاء الطلب (حفظ بيانات العميل بشكل صحيح) ───
 app.post('/api/order', (req, res) => {
   try {
-    const { name, phone, email, address, notes, items, total, shippingOptionId, shippingCost, discountAmount } = req.body;
-    if (!name || !phone || !address || !items || !Array.isArray(items)) {
+    const body = req.body || {};
+    const name = String(body.name || '').trim();
+    const phone = String(body.phone || '').trim();
+    const address = String(body.address || '').trim();
+    const email = String(body.email || '').trim();
+    const notes = String(body.notes || '').trim();
+    const items = Array.isArray(body.items) ? body.items : [];
+    const total = typeof body.total === 'number' ? body.total : NaN;
+    const shippingOptionId = String(body.shippingOptionId || '').trim();
+    const shippingCost = typeof body.shippingCost === 'number' ? body.shippingCost : 0;
+    const discountAmount = typeof body.discountAmount === 'number' ? body.discountAmount : 0;
+
+    if (!name || !phone || !address) {
       return res.status(400).json({
         success: false,
         message: 'بيانات ناقصة: الاسم، الجوال، والعنوان مطلوبة'
       });
     }
+    if (!items.length) {
+      return res.status(400).json({
+        success: false,
+        message: 'السلة فارغة. أضف منتجات ثم أكمّل الطلب.'
+      });
+    }
 
-    const subtotal = typeof total === 'number' ? total : items.reduce((s, i) => s + (i.price || 0) * (i.qty || 1), 0);
-    const shipping = typeof shippingCost === 'number' ? shippingCost : 0;
-    const discount = typeof discountAmount === 'number' ? Math.min(discountAmount, subtotal) : 0;
+    const subtotal = Number.isFinite(total) ? total : items.reduce((s, i) => s + (Number(i.price) || 0) * (Number(i.qty) || 1), 0);
+    const shipping = Number.isFinite(shippingCost) ? shippingCost : 0;
+    const discount = Number.isFinite(discountAmount) ? Math.min(discountAmount, subtotal) : 0;
     const totalWithShipping = Math.max(0, subtotal - discount + shipping);
 
     const order = {
@@ -278,32 +405,39 @@ app.post('/api/order', (req, res) => {
       date: new Date().toISOString(),
       name,
       phone,
-      email: email || '',
+      email,
       address,
-      notes: notes || '',
-      items,
+      notes,
+      items: items.map(i => ({
+        id: i.id,
+        title: i.title || '',
+        price: Number(i.price) || 0,
+        qty: Math.max(1, parseInt(i.qty, 10) || 1)
+      })),
       subtotal,
       discountAmount: discount,
-      shippingOptionId: shippingOptionId || '',
+      shippingOptionId,
       shippingCost: shipping,
       total: totalWithShipping,
       status: getConfig().moyasarSecretKey ? 'pending_payment' : 'confirmed'
     };
 
+    const dataDir = path.join(__dirname, 'data');
+    if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
     const orders = readOrders();
     orders.push(order);
     saveOrders(orders);
 
-    res.json({
+    res.status(200).json({
       success: true,
-      message: 'تم استلام طلبك',
+      message: 'تم استلام طلبك وحفظ بياناتك بنجاح',
       orderId: order.id,
       total: order.total,
       paymentRequired: !!getConfig().moyasarSecretKey
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: 'حدث خطأ في الخادم' });
+    console.error('Order save error:', err);
+    res.status(500).json({ success: false, message: 'حدث خطأ في الخادم. حاول مرة أخرى.' });
   }
 });
 
@@ -477,11 +611,9 @@ app.post('/api/support', (req, res) => {
   }
 });
 
-app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
-app.get('/admin.html', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
-
 app.get('*', (req, res) => {
   if (req.path.startsWith('/api')) return res.status(404).json({ error: 'Not found' });
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
