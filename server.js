@@ -6,6 +6,8 @@ const { getRatesFromCarriers } = require('./shipping-carriers');
 require('dotenv').config();
 
 const app = express();
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 const PORT = process.env.PORT || 3000;
 const ORDERS_FILE = path.join(__dirname, 'data', 'orders.json');
 const CONFIG_FILE = path.join(__dirname, 'data', 'config.json');
@@ -31,7 +33,8 @@ function getConfig() {
     whatsappPhone: (c.whatsappPhone || '0506323309').trim().replace(/\D/g, ''),
     shippingCarriers: c.shippingCarriers && typeof c.shippingCarriers === 'object' ? c.shippingCarriers : {},
     adminPhone: (c.adminPhone || c.whatsappPhone || '0506323309').trim().replace(/\D/g, '') || '0506323309',
-    otpWebhookUrl: (c.otpWebhookUrl || process.env.OTP_WEBHOOK_URL || '').trim()
+    otpWebhookUrl: (c.otpWebhookUrl || process.env.OTP_WEBHOOK_URL || '').trim(),
+    customerNotifyWebhook: (c.customerNotifyWebhook || process.env.CUSTOMER_NOTIFY_WEBHOOK || '').trim()
   };
 }
 function saveConfig(obj) {
@@ -53,6 +56,7 @@ function saveConfig(obj) {
   if (obj.shippingCarriers !== undefined && typeof obj.shippingCarriers === 'object') existing.shippingCarriers = obj.shippingCarriers;
   if (obj.adminPhone !== undefined) existing.adminPhone = String(obj.adminPhone).trim().replace(/\D/g, '') || '';
   if (obj.otpWebhookUrl !== undefined) existing.otpWebhookUrl = String(obj.otpWebhookUrl).trim();
+  if (obj.customerNotifyWebhook !== undefined) existing.customerNotifyWebhook = String(obj.customerNotifyWebhook).trim();
   fs.writeFileSync(CONFIG_FILE, JSON.stringify(existing, null, 2), 'utf8');
 }
 function hashPassword(pwd) {
@@ -61,8 +65,10 @@ function hashPassword(pwd) {
 function verifyAdmin(username, password) {
   const cfg = getConfig();
   if (!cfg.adminPasswordHash) return true;
-  const userOk = (cfg.adminUsername || 'HASSAN.1949').trim() === String(username || '').trim();
-  const passOk = cfg.adminPasswordHash === hashPassword(password);
+  const user = String(username || '').trim();
+  const pass = String(password || '').trim();
+  const userOk = (cfg.adminUsername || 'HASSAN.1949').trim() === user;
+  const passOk = cfg.adminPasswordHash === hashPassword(pass);
   return userOk && passOk;
 }
 
@@ -89,17 +95,22 @@ function sendOTPToPhone(phone, code) {
 
 app.post('/api/admin/login-request', (req, res) => {
   try {
-    const { username, password } = req.body || {};
-    if (!username || !password) {
+    const body = req.body && typeof req.body === 'object' ? req.body : {};
+    const user = String(body.username != null ? body.username : '').trim();
+    const pass = body.password != null ? String(body.password) : '';
+    if (!user || !pass) {
       return res.status(400).json({ success: false, message: 'اسم المستخدم وكلمة المرور مطلوبان' });
     }
-    if (!verifyAdmin(username.trim(), password)) {
+    if (!verifyAdmin(user, pass)) {
       return res.status(401).json({ success: false, message: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
     }
     const cfg = getConfig();
+    if (!cfg.otpWebhookUrl || !cfg.otpWebhookUrl.trim()) {
+      return res.json({ success: true, skipOtp: true, message: 'تم التحقق. يمكنك الدخول مباشرة.' });
+    }
     const phone = cfg.adminPhone || cfg.whatsappPhone || '0506323309';
     const code = generateOTP();
-    pendingOTP[username.trim()] = { code, expiresAt: Date.now() + OTP_EXPIRY_MS, password };
+    pendingOTP[user] = { code, expiresAt: Date.now() + OTP_EXPIRY_MS, password: pass };
     sendOTPToPhone(phone, code);
     res.json({ success: true, message: 'تم إرسال الكود إلى جوالك. أدخل الكود خلال 5 دقائق.' });
   } catch (err) {
@@ -114,7 +125,7 @@ app.post('/api/admin/login-verify', (req, res) => {
     if (!username || !code) {
       return res.status(400).json({ success: false, message: 'اسم المستخدم والكود مطلوبان' });
     }
-    const key = username.trim();
+    const key = String(username || '').trim();
     const pending = pendingOTP[key];
     if (!pending) {
       return res.status(401).json({ success: false, message: 'لم يطلب كوداً أو انتهت صلاحية الطلب. جرّب تسجيل الدخول من جديد.' });
@@ -137,10 +148,6 @@ app.post('/api/admin/login-verify', (req, res) => {
     res.status(500).json({ success: false, message: 'حدث خطأ' });
   }
 });
-
-// وسطاء
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 // الصفحة الرئيسية ولوحة التحكم — عرض التطبيق مباشرة عند فتح الرابط (قبل static لتفادي ظهور أكواد)
 app.get('/', (req, res) => {
@@ -179,6 +186,7 @@ if (!fs.existsSync(CONFIG_FILE)) {
     whatsappPhone: '0506323309',
     adminPhone: '0506323309',
     otpWebhookUrl: '',
+    customerNotifyWebhook: '',
     shippingCarriers: {}
   }, null, 2), 'utf8');
 }
@@ -240,9 +248,20 @@ function updateOrderStatus(orderId, status, paymentId) {
   const orders = readOrders();
   const i = orders.findIndex(o => o.id === parseInt(orderId, 10));
   if (i === -1) return false;
+  const prev = orders[i].status;
   orders[i].status = status;
   if (paymentId) orders[i].paymentId = paymentId;
   saveOrders(orders);
+  const cfg = getConfig();
+  const webhook = cfg.customerNotifyWebhook && cfg.customerNotifyWebhook.trim();
+  if (webhook && (status === 'confirmed' || status === 'shipped')) {
+    const o = orders[i];
+    const msg = status === 'confirmed' ? 'تم قبول طلبك #' + orderId : 'تم شحن طلبك #' + orderId;
+    const body = JSON.stringify({ orderId: o.id, phone: o.phone, name: o.name, status, message: msg });
+    if (typeof fetch === 'function') {
+      fetch(webhook, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body }).catch(() => {});
+    }
+  }
   return true;
 }
 
@@ -299,18 +318,21 @@ app.get('/api/admin/status', (req, res) => {
     whatsappPhone: c.whatsappPhone || '0506323309',
     shippingCarriers: c.shippingCarriers || {},
     adminPhone: c.adminPhone || c.whatsappPhone || '0506323309',
-    otpWebhookUrl: c.otpWebhookUrl || ''
+    otpWebhookUrl: c.otpWebhookUrl || '',
+    customerNotifyWebhook: c.customerNotifyWebhook || ''
   });
 });
 
 // ─── حفظ إعدادات المتجر (بوابة الدفع، الشحن، جوجل، تغيير كلمة المرور) ───
 app.post('/api/admin/config', (req, res) => {
   try {
-    const { username, password, newPassword, moyasarSecretKey, shippingStandardPrice, shippingExpressPrice, googleAnalyticsId, baseUrl, coupons, whatsappPhone, shippingCarriers, adminPhone, otpWebhookUrl } = req.body || {};
+    const { username, password, newPassword, moyasarSecretKey, shippingStandardPrice, shippingExpressPrice, googleAnalyticsId, baseUrl, coupons, whatsappPhone, shippingCarriers, adminPhone, otpWebhookUrl, customerNotifyWebhook } = req.body || {};
     const c = getConfig();
 
     if (c.adminPasswordHash) {
-      if (!username || !password || !verifyAdmin(username, password)) {
+      const user = String(username || '').trim();
+      const pass = String(password || '').trim();
+      if (!user || !pass || !verifyAdmin(user, pass)) {
         return res.status(401).json({ success: false, message: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
       }
       const         toSave = {
@@ -323,7 +345,8 @@ app.post('/api/admin/config', (req, res) => {
         whatsappPhone: whatsappPhone !== undefined ? String(whatsappPhone).trim().replace(/\D/g, '') || '0506323309' : undefined,
         shippingCarriers: shippingCarriers !== undefined && typeof shippingCarriers === 'object' ? shippingCarriers : undefined,
         adminPhone: adminPhone !== undefined ? String(adminPhone).trim().replace(/\D/g, '') || undefined : undefined,
-        otpWebhookUrl: otpWebhookUrl !== undefined ? String(otpWebhookUrl).trim() : undefined
+        otpWebhookUrl: otpWebhookUrl !== undefined ? String(otpWebhookUrl).trim() : undefined,
+        customerNotifyWebhook: customerNotifyWebhook !== undefined ? String(customerNotifyWebhook).trim() : undefined
       };
       if (newPassword && String(newPassword).length >= 4) {
         toSave.adminPasswordHash = hashPassword(newPassword);
@@ -544,6 +567,28 @@ app.get('/api/admin/orders', (req, res) => {
     }
     const orders = readOrders();
     res.json({ success: true, orders: orders.reverse() });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'حدث خطأ' });
+  }
+});
+
+app.patch('/api/admin/orders/:id/status', (req, res) => {
+  try {
+    const auth = parseBasicAuth(req);
+    if (!auth || !verifyAdmin(auth.username, auth.password)) {
+      return res.status(401).json({ success: false, message: 'يجب تسجيل الدخول' });
+    }
+    const id = parseInt(req.params.id, 10);
+    const { status } = req.body || {};
+    const s = String(status || '').trim();
+    const allowed = ['pending_payment', 'confirmed', 'paid', 'shipped', 'cancelled'];
+    if (!allowed.includes(s)) {
+      return res.status(400).json({ success: false, message: 'حالة غير صالحة' });
+    }
+    if (!updateOrderStatus(id, s)) {
+      return res.status(404).json({ success: false, message: 'الطلب غير موجود' });
+    }
+    res.json({ success: true, status: s });
   } catch (err) {
     res.status(500).json({ success: false, message: 'حدث خطأ' });
   }

@@ -105,8 +105,8 @@ async function getRedBoxRates(cfg, params) {
 async function getRatesFromCarriers(config, params = {}) {
   const carriers = mergeCarrierConfig(config.shippingCarriers || {});
   const staticOptions = [
-    { id: 'standard', carrier: 'internal', label: 'توصيل عادي', labelEn: 'Standard', price: config.shippingStandardPrice ?? 36, days: '2-4 أيام' },
-    { id: 'express', carrier: 'internal', label: 'توصيل سريع', labelEn: 'Express', price: config.shippingExpressPrice ?? 41, days: '1-2 يوم' }
+    { id: 'standard', carrier: 'internal', label: 'توصيل عادي', labelEn: 'Standard', price: config.shippingStandardPrice ?? 36, days: '3–6 أيام' },
+    { id: 'express', carrier: 'internal', label: 'توصيل سريع', labelEn: 'Express', price: config.shippingExpressPrice ?? 41, days: '2–4 أيام' }
   ];
 
   const fromCarriers = [];

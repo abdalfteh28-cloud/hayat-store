@@ -29,6 +29,10 @@
     .login-wrap label { display: block; margin-bottom: 1rem; }
     .login-wrap label span { display: block; margin-bottom: 0.35rem; color: var(--admin-muted); font-size: 0.9rem; }
     .login-wrap input { width: 100%; padding: 0.7rem; background: var(--admin-bg); border: 1px solid var(--admin-border); border-radius: 8px; color: var(--admin-text); font-family: var(--font); box-sizing: border-box; }
+    .password-field { display: flex; align-items: center; gap: 0.25rem; width: 100%; }
+    .password-field input { flex: 1; min-width: 0; }
+    .toggle-password { width: 2.5rem; height: 2.5rem; padding: 0; background: var(--admin-bg); border: 1px solid var(--admin-border); border-radius: 8px; color: var(--admin-muted); cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; }
+    .toggle-password:hover { color: var(--admin-primary); border-color: var(--admin-primary); }
     .login-wrap button { width: 100%; padding: 0.85rem; background: var(--admin-primary); color: var(--admin-bg); border: none; border-radius: 8px; font-family: var(--font); font-weight: 700; cursor: pointer; }
     .login-error { color: #f85149; font-size: 0.9rem; margin-top: 0.5rem; }
     .stat-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
@@ -43,6 +47,8 @@
     .os.paid { background: rgba(34,197,94,0.2); color: #22c55e; }
     .os.confirmed { background: rgba(59,130,246,0.2); color: #3b82f6; }
     .os.pending_payment { background: rgba(245,158,11,0.2); color: #f59e0b; }
+    .os.shipped { background: rgba(34,197,94,0.2); color: #22c55e; }
+    .os.cancelled { background: rgba(248,81,73,0.2); color: #f85149; }
     .config-form label { display: block; margin-bottom: 1rem; }
     .config-form label span { display: block; margin-bottom: 0.35rem; color: var(--admin-muted); font-size: 0.9rem; }
     .config-form input, .config-form textarea { width: 100%; max-width: 420px; padding: 0.65rem 0.85rem; background: var(--admin-bg); border: 1px solid var(--admin-border); border-radius: 8px; color: var(--admin-text); font-family: var(--font); box-sizing: border-box; }
@@ -100,8 +106,13 @@
     <div id="loginStep1">
       <p style="color:var(--admin-muted); font-size:0.9rem; margin-bottom:1rem;">أدخل اسم المستخدم وكلمة المرور، ثم سيُرسل كود إلى جوالك لإكمال الدخول.</p>
       <form id="loginForm">
-        <label><span>اسم المستخدم</span><input type="text" id="adminUser" required placeholder="HASSAN.1949"></label>
-        <label><span>كلمة المرور</span><input type="password" id="adminPass" required></label>
+        <label><span>اسم المستخدم</span><input type="text" id="adminUser" name="username" required placeholder="HASSAN.1949" autocomplete="username"></label>
+        <label class="password-wrap"><span>كلمة المرور</span>
+          <span class="password-field">
+            <input type="password" id="adminPass" name="password" required placeholder="كلمة المرور" autocomplete="current-password">
+            <button type="button" class="toggle-password" id="togglePassword" title="إظهار / إخفاء كلمة المرور" aria-label="إظهار كلمة المرور">👁</button>
+          </span>
+        </label>
         <button type="submit">إرسال الكود إلى جوالك</button>
         <p id="loginError" class="login-error" style="display:none;"></p>
       </form>
@@ -150,15 +161,17 @@
           <label><span>تصفية الحالة</span>
             <select id="ordersFilterStatus" class="admin-select">
               <option value="">كل الحالات</option>
+              <option value="pending_payment">بانتظار الدفع</option>
               <option value="paid">مدفوع</option>
               <option value="confirmed">مؤكد</option>
-              <option value="pending_payment">بانتظار الدفع</option>
+              <option value="shipped">تم الشحن</option>
+              <option value="cancelled">ملغي</option>
             </select>
           </label>
         </div>
         <div style="overflow-x:auto;">
           <table class="orders-table" id="ordersTable">
-            <thead><tr><th>#</th><th>التاريخ</th><th>العميل</th><th>الجوال</th><th>العنوان</th><th>المبلغ</th><th>الحالة</th><th>واتساب</th></tr></thead>
+            <thead><tr><th>#</th><th>التاريخ</th><th>العميل</th><th>الجوال</th><th>العنوان</th><th>المبلغ</th><th>الحالة</th><th>تغيير الحالة</th><th>واتساب</th></tr></thead>
             <tbody id="ordersBody"></tbody>
           </table>
         </div>
@@ -238,6 +251,7 @@
           <label><span>رقم واتساب المتجر (للتواصل والإشعارات)</span><input type="text" id="configWhatsapp" placeholder="0506323309" dir="ltr"></label>
           <label><span>جوال استلام كود الدخول (OTP)</span><input type="text" id="configAdminPhone" placeholder="0506323309" dir="ltr"><span class="hint" style="font-size:0.8rem; color:var(--admin-muted);">يُرسل إليه كود الدخول عند تسجيل الدخول للوحة التحكم.</span></label>
           <label><span>رابط إرسال الكود (Webhook — اختياري)</span><input type="url" id="configOtpWebhook" placeholder="https://..." dir="ltr"><span class="hint" style="font-size:0.8rem; color:var(--admin-muted);">إذا وُجد، يُرسل له طلب POST يحتوي phone و code و message لربط بوت واتساب أو خدمة SMS.</span></label>
+          <label><span>رابط إشعار العميل (عند قبول الطلب أو الشحن)</span><input type="url" id="configCustomerNotifyWebhook" placeholder="https://..." dir="ltr"><span class="hint" style="font-size:0.8rem; color:var(--admin-muted);">عند تغيير حالة الطلب إلى «مؤكد» أو «تم الشحن» يُرسل POST إلى هذا الرابط: orderId, phone, name, status, message. لاستخدام واتساب أو SMS ربط هذا الرابط بخدمتك.</span></label>
           <label><span>كوبونات الخصم (JSON مصفوفة، مثال: [{"code":"SAVE10","type":"percent","value":10}])</span><textarea id="configCoupons" rows="3" placeholder='[{"code":"SAVE10","type":"percent","value":10}]'></textarea></label>
           <label><span>كلمة مرور جديدة (اتركها فارغة للإبقاء)</span><input type="password" id="configNewPass"></label>
           <button type="submit">حفظ الإعدادات</button>
@@ -260,12 +274,25 @@
 
   loginForm.addEventListener('submit', async function(e) {
     e.preventDefault();
-    var username = document.getElementById('adminUser').value.trim();
-    var password = document.getElementById('adminPass').value;
+    var form = e.target;
+    var username = (form.username && form.username.value ? String(form.username.value).trim() : '') || (document.getElementById('adminUser') && document.getElementById('adminUser').value ? String(document.getElementById('adminUser').value).trim() : '');
+    var password = (form.password && form.password.value ? String(form.password.value) : '') || (document.getElementById('adminPass') && document.getElementById('adminPass').value ? document.getElementById('adminPass').value : '');
     loginError.style.display = 'none';
+    if (!username || !password) {
+      loginError.textContent = 'اسم المستخدم وكلمة المرور مطلوبان';
+      loginError.style.display = 'block';
+      return;
+    }
     var res = await fetch('/api/admin/login-request', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: username, password: password }) });
-    var data = await res.json();
+    var data = await res.json().catch(function() { return { success: false, message: 'خطأ في الاتصال' }; });
     if (data.success) {
+      if (data.skipOtp) {
+        adminAuth = { username: username, password: password };
+        loginScreen.style.display = 'none';
+        dashboardScreen.style.display = 'flex';
+        loadOrders(); loadConfig(); loadProducts(); loadSupport();
+        return;
+      }
       window._loginUsername = username;
       window._loginPassword = password;
       document.getElementById('loginStep1').style.display = 'none';
@@ -273,10 +300,21 @@
       document.getElementById('adminOtp').value = '';
       document.getElementById('adminOtp').focus();
     } else {
-      loginError.textContent = data.message || 'اسم المستخدم أو كلمة المرور غير صحيحة';
+      loginError.textContent = (data && data.message) || 'اسم المستخدم أو كلمة المرور غير صحيحة';
       loginError.style.display = 'block';
     }
   });
+
+  var togglePasswordBtn = document.getElementById('togglePassword');
+  var adminPassInput = document.getElementById('adminPass');
+  if (togglePasswordBtn && adminPassInput) {
+    togglePasswordBtn.addEventListener('click', function() {
+      var isPass = adminPassInput.type === 'password';
+      adminPassInput.type = isPass ? 'text' : 'password';
+      togglePasswordBtn.textContent = isPass ? '🙈' : '👁';
+      togglePasswordBtn.setAttribute('aria-label', isPass ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور');
+    });
+  }
 
   document.getElementById('otpBackBtn').addEventListener('click', function() {
     document.getElementById('loginStep2').style.display = 'none';
@@ -424,34 +462,41 @@
   }
 
   document.getElementById('saveProductsBtn').addEventListener('click', async function() {
-    var cards = document.querySelectorAll('#productsEditor .admin-product-card');
+    if (!adminAuth) { alert('يجب تسجيل الدخول أولاً'); return; }
+    var container = document.getElementById('productsEditor');
+    var cards = container ? container.querySelectorAll('.admin-product-card') : [];
     var products = [];
     cards.forEach(function(card) {
-      var title = (card.querySelector('[name="title"]') || {}).value;
-      if (!title) title = card.querySelector('[name="desc"]') && card.querySelector('[name="desc"]').value ? 'منتج' : 'شهري';
-      title = title.trim() || 'شهري';
+      var titleEl = card.querySelector('[name="title"]');
+      var descEl = card.querySelector('[name="desc"]');
+      var title = (titleEl && titleEl.value ? titleEl.value.trim() : '') || (descEl && descEl.value ? descEl.value.trim() : '') || 'شهري';
+      var priceEl = card.querySelector('[name="price"]');
+      var qtyEl = card.querySelector('[name="quantity"]');
+      var longEl = card.querySelector('[name="longDescription"]');
+      var discountEl = card.querySelector('[name="discountPercent"]');
+      var categoryEl = card.querySelector('[name="category"]');
       products.push({
         id: parseInt(card.getAttribute('data-id'), 10) || products.length + 1,
         period: title,
         title: title,
-        desc: (card.querySelector('[name="desc"]') || {}).value.trim() || '',
-        longDescription: (card.querySelector('[name="longDescription"]') || {}).value.trim() || '',
-        price: parseInt((card.querySelector('[name="price"]') || {}).value, 10) || 0,
-        quantity: parseInt((card.querySelector('[name="quantity"]') || {}).value, 10) || 999,
+        desc: (descEl && descEl.value ? descEl.value.trim() : '') || '',
+        longDescription: (longEl && longEl.value ? longEl.value.trim() : '') || '',
+        price: parseInt(priceEl && priceEl.value ? priceEl.value : 0, 10) || 0,
+        quantity: parseInt(qtyEl && qtyEl.value ? qtyEl.value : 999, 10) || 999,
         image: card.getAttribute('data-image') || 'plan-monthly.png',
         planClass: card.getAttribute('data-planclass') || 'plan-monthly',
-        discountPercent: parseInt((card.querySelector('[name="discountPercent"]') || {}).value, 10) || 0,
+        discountPercent: parseInt(discountEl && discountEl.value ? discountEl.value : 0, 10) || 0,
         couponCode: '',
-        category: (card.querySelector('[name="category"]') || {}).value.trim() || ''
+        category: (categoryEl && categoryEl.value ? categoryEl.value.trim() : '') || ''
       });
     });
     adminProducts = products;
     var res = await fetch('/api/admin/products', { method: 'POST', headers: { ...authHeader(), 'Content-Type': 'application/json' }, body: JSON.stringify({ products: products }) });
-    var data = await res.json();
+    var data = await res.json().catch(function() { return { success: false, message: 'استجابة غير صحيحة' }; });
     if (data.success) {
       document.getElementById('productsSaved').style.display = 'block';
       setTimeout(function() { document.getElementById('productsSaved').style.display = 'none'; }, 3000);
-    } else alert(data.message || 'فشل الحفظ');
+    } else alert((data && data.message) || 'فشل الحفظ. تأكد من تسجيل الدخول.');
   });
 
   var allOrdersCache = [];
@@ -470,13 +515,25 @@
       '<div class="stat-card"><span class="n">' + Math.round(rev) + ' ر.س</span><span class="l">إجمالي المبيعات</span></div>';
     var tbody = document.getElementById('ordersBody');
     document.getElementById('ordersEmpty').style.display = orders.length ? 'none' : 'block';
+    var statusLabels = { pending_payment: 'بانتظار الدفع', paid: 'مدفوع', confirmed: 'مؤكد', shipped: 'تم الشحن', cancelled: 'ملغي' };
     tbody.innerHTML = orders.length ? orders.slice(0, 100).map(function(o) {
-      var st = o.status === 'paid' ? 'مدفوع' : o.status === 'confirmed' ? 'مؤكد' : o.status === 'pending_payment' ? 'بانتظار الدفع' : o.status || '-';
+      var st = statusLabels[o.status] || o.status || '-';
       var sc = (o.status || '').replace(/\s/g, '_');
       var date = o.date ? new Date(o.date).toLocaleDateString('ar-SA') : '-';
       var wa = (o.phone || '').trim() ? '<a href="' + waLink(o.phone) + '" target="_blank" rel="noopener" class="wa-btn">واتساب</a>' : '-';
-      return '<tr><td>' + o.id + '</td><td>' + date + '</td><td>' + (o.name || '-') + '</td><td>' + (o.phone || '-') + '</td><td>' + (o.address || '-') + '</td><td>' + (o.total || 0) + ' ر.س</td><td><span class="os ' + sc + '">' + st + '</span></td><td>' + wa + '</td></tr>';
+      var opts = ['pending_payment','confirmed','paid','shipped','cancelled'].map(function(s) { return '<option value="' + s + '"' + (o.status === s ? ' selected' : '') + '>' + (statusLabels[s] || s) + '</option>'; }).join('');
+      var statusSelect = '<select class="admin-select order-status-select" data-order-id="' + o.id + '" style="min-width:120px;">' + opts + '</select>';
+      return '<tr><td>' + o.id + '</td><td>' + date + '</td><td>' + (o.name || '-') + '</td><td>' + (o.phone || '-') + '</td><td>' + (o.address || '-') + '</td><td>' + (o.total || 0) + ' ر.س</td><td><span class="os ' + sc + '">' + st + '</span></td><td>' + statusSelect + '</td><td>' + wa + '</td></tr>';
     }).join('') : '';
+    tbody.querySelectorAll('.order-status-select').forEach(function(sel) {
+      sel.addEventListener('change', async function() {
+        var id = this.getAttribute('data-order-id');
+        var newStatus = this.value;
+        var res = await fetch('/api/admin/orders/' + id + '/status', { method: 'PATCH', headers: { ...authHeader(), 'Content-Type': 'application/json' }, body: JSON.stringify({ status: newStatus }) });
+        var data = await res.json();
+        if (data.success) loadOrders(); else alert(data.message || 'فشل تحديث الحالة');
+      });
+    });
   }
   var ordersFilterEl = document.getElementById('ordersFilterStatus');
   if (ordersFilterEl) ordersFilterEl.addEventListener('change', loadOrders);
@@ -573,6 +630,8 @@
     if (configAdminPhoneEl) configAdminPhoneEl.value = ap || '0506323309';
     var configOtpWebhookEl = document.getElementById('configOtpWebhook');
     if (configOtpWebhookEl) configOtpWebhookEl.value = c.otpWebhookUrl || '';
+    var configCustomerNotifyEl = document.getElementById('configCustomerNotifyWebhook');
+    if (configCustomerNotifyEl) configCustomerNotifyEl.value = c.customerNotifyWebhook || '';
     var sidebarWa = document.getElementById('sidebarWhatsapp');
     if (sidebarWa) sidebarWa.href = waLink(c.whatsappPhone || '0506323309');
     var sc = c.shippingCarriers || {};
@@ -614,6 +673,7 @@
       whatsappPhone: document.getElementById('configWhatsapp').value.trim() || '0506323309',
       adminPhone: document.getElementById('configAdminPhone').value.trim() || '',
       otpWebhookUrl: document.getElementById('configOtpWebhook').value.trim() || '',
+      customerNotifyWebhook: (document.getElementById('configCustomerNotifyWebhook') || {}).value ? document.getElementById('configCustomerNotifyWebhook').value.trim() : '',
       shippingCarriers: getShippingCarriersFromForm(),
       coupons: []
     };

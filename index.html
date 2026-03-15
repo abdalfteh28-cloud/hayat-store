@@ -249,50 +249,88 @@
   <div class="cart-overlay" id="cartOverlay"></div>
 
   <div class="checkout-modal" id="checkoutModal">
-    <div class="modal-content">
+    <div class="modal-content checkout-steps">
       <button class="close-modal" id="closeModal">✕</button>
       <h3>إتمام الطلب</h3>
+      <div class="checkout-progress">
+        <span class="step-dot active" data-step="1">١</span>
+        <span class="step-line"></span>
+        <span class="step-dot" data-step="2">٢</span>
+        <span class="step-line"></span>
+        <span class="step-dot" data-step="3">٣</span>
+      </div>
       <form id="checkoutForm">
-        <label>
-          <span>الاسم الكامل</span>
-          <input type="text" name="name" required placeholder="أدخل اسمك">
-        </label>
-        <label>
-          <span>رقم الجوال</span>
-          <input type="tel" name="phone" required placeholder="05xxxxxxxx">
-        </label>
-        <label>
-          <span>البريد الإلكتروني</span>
-          <input type="email" name="email" placeholder="example@email.com">
-        </label>
-        <label>
-          <span>العنوان / المدينة</span>
-          <input type="text" name="address" required placeholder="المدينة أو العنوان">
-        </label>
-        <label class="shipping-label">
-          <span>طريقة التوصيل</span>
-          <select name="shipping" id="shippingSelect" required>
-            <option value="">اختر التوصيل...</option>
-          </select>
-          <span class="shipping-hint" id="shippingHint"></span>
-        </label>
-        <label>
-          <span>كود الخصم (اختياري)</span>
-          <input type="text" name="coupon" id="couponInput" placeholder="أدخل الكود">
-          <span class="coupon-msg" id="couponMsg"></span>
-        </label>
-        <div class="order-summary" id="orderSummary">
-          <span>المجموع الفرعي:</span> <span id="subtotalEl">٠ ر.س</span><br>
-          <span>الخصم:</span> <span id="discountEl">٠ ر.س</span><br>
-          <span>الشحن:</span> <span id="shippingEl">٠ ر.س</span><br>
-          <strong>الإجمالي:</strong> <span id="totalEl">٠ ر.س</span>
+        <div class="checkout-step" id="checkoutStep1">
+          <p class="step-title">بيانات العميل</p>
+          <label class="field-with-icon">
+            <span class="label-icon" aria-hidden="true">👤</span>
+            <span>الاسم الكامل</span>
+            <input type="text" name="name" required placeholder="أدخل اسمك الكامل">
+          </label>
+          <label class="field-with-icon">
+            <span class="label-icon" aria-hidden="true">📱</span>
+            <span>رقم الجوال</span>
+            <input type="tel" name="phone" required placeholder="05xxxxxxxx">
+          </label>
+          <label class="field-with-icon">
+            <span class="label-icon" aria-hidden="true">✉️</span>
+            <span>البريد الإلكتروني (اختياري)</span>
+            <input type="email" name="email" placeholder="example@email.com">
+          </label>
+          <label class="field-with-icon">
+            <span class="label-icon" aria-hidden="true">📍</span>
+            <span>العنوان التفصيلي للتوصيل</span>
+            <input type="text" name="address" required placeholder="المدينة، الحي، الشارع، رقم المبنى، الرمز البريدي">
+          </label>
+          <label>
+            <span>ملاحظات (اختياري)</span>
+            <textarea name="notes" rows="2" placeholder="ملاحظات إضافية للطلب"></textarea>
+          </label>
+          <button type="button" class="btn-next" id="checkoutNext1">التالي ← اختيار الشحن</button>
         </div>
-        <label>
-          <span>ملاحظات</span>
-          <textarea name="notes" rows="3" placeholder="ملاحظات إضافية للطلب"></textarea>
-        </label>
-        <button type="submit" class="submit-order">تأكيد الطلب</button>
+        <div class="checkout-step" id="checkoutStep2" style="display:none;">
+          <p class="step-title">شركة الشحن وطريقة التوصيل</p>
+          <label class="shipping-label">
+            <span class="label-icon" aria-hidden="true">🚚</span>
+            <span>اختر شركة التوصيل والطريقة</span>
+            <select name="shipping" id="shippingSelect" required>
+              <option value="">اختر التوصيل...</option>
+            </select>
+            <span class="shipping-hint" id="shippingHint"></span>
+          </label>
+          <label>
+            <span>كود الخصم (اختياري)</span>
+            <input type="text" name="coupon" id="couponInput" placeholder="أدخل الكود">
+            <span class="coupon-msg" id="couponMsg"></span>
+          </label>
+          <div class="step-buttons">
+            <button type="button" class="btn-prev" id="checkoutPrev2">← السابق</button>
+            <button type="button" class="btn-next" id="checkoutNext2">التالي ← الملخص والدفع</button>
+          </div>
+        </div>
+        <div class="checkout-step" id="checkoutStep3" style="display:none;">
+          <p class="step-title">ملخص الطلب والدفع</p>
+          <div class="order-summary" id="orderSummary">
+            <span>المجموع الفرعي:</span> <span id="subtotalEl">٠ ر.س</span><br>
+            <span>الخصم:</span> <span id="discountEl">٠ ر.س</span><br>
+            <span>الشحن:</span> <span id="shippingEl">٠ ر.س</span><br>
+            <strong>الإجمالي:</strong> <span id="totalEl">٠ ر.س</span>
+          </div>
+          <div class="step-buttons">
+            <button type="button" class="btn-prev" id="checkoutPrev3">← السابق</button>
+            <button type="submit" class="submit-order">تأكيد الطلب والدفع</button>
+          </div>
+        </div>
       </form>
+    </div>
+  </div>
+  <div class="checkout-success-overlay" id="checkoutSuccessOverlay" style="display:none;">
+    <div class="checkout-success-box">
+      <span class="success-icon">✓</span>
+      <h3>شكراً لك! تم استلام طلبك</h3>
+      <p class="order-id-msg">رقم الطلب: <strong id="successOrderId">#0</strong></p>
+      <p class="status-msg">قيد المراجعة — سنتواصل معك قريباً.</p>
+      <button type="button" class="btn-close-success" id="closeSuccessBtn">إغلاق</button>
     </div>
   </div>
 
@@ -300,7 +338,7 @@
     <div class="container">
       <h2 class="section-title">سياسة الشحن والتوصيل</h2>
       <div class="policy-text">
-        <p>نوصل شرائح حياة لجميع مناطق المملكة. يمكنك اختيار <strong>توصيل عادي</strong> (2–4 أيام) أو <strong>توصيل سريع</strong> (1–2 يوم). تكلفة الشحن تظهر عند إتمام الطلب حسب اختيارك. التفعيل يتم عبر تطبيق (نفاذ) أو عند الاستلام حسب نوع الشريحة.</p>
+        <p>نوصل شرائح حياة لجميع مناطق المملكة. يمكنك اختيار <strong>توصيل عادي</strong> (3–6 أيام) أو <strong>توصيل سريع</strong> (2–4 أيام) أو إحدى شركات الشحن. تكلفة الشحن تظهر عند إتمام الطلب حسب اختيارك. التفعيل يتم عبر تطبيق (نفاذ) أو عند الاستلام حسب نوع الشريحة.</p>
       </div>
 
       <h2 class="section-title">الدعم الفني والتواصل</h2>

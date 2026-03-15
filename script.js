@@ -227,7 +227,32 @@ function openCheckout() {
   if (couponInput) couponInput.value = '';
   if (couponMsg) couponMsg.textContent = '';
   loadShippingOptions();
+  showCheckoutStep(1);
   checkoutModal.classList.add('open');
+}
+
+function showCheckoutStep(step) {
+  var s1 = document.getElementById('checkoutStep1');
+  var s2 = document.getElementById('checkoutStep2');
+  var s3 = document.getElementById('checkoutStep3');
+  document.querySelectorAll('.checkout-step').forEach(function(el) { el.style.display = 'none'; });
+  document.querySelectorAll('.step-dot').forEach(function(d) { d.classList.remove('active'); });
+  if (step === 1 && s1) { s1.style.display = 'block'; document.querySelector('.step-dot[data-step="1"]') && document.querySelector('.step-dot[data-step="1"]').classList.add('active'); }
+  if (step === 2 && s2) { s2.style.display = 'block'; document.querySelector('.step-dot[data-step="2"]') && document.querySelector('.step-dot[data-step="2"]').classList.add('active'); }
+  if (step === 3 && s3) { s3.style.display = 'block'; document.querySelector('.step-dot[data-step="3"]') && document.querySelector('.step-dot[data-step="3"]').classList.add('active'); updateCheckoutSummary(); }
+}
+
+function showCheckoutSuccess(orderId) {
+  checkoutModal.classList.remove('open');
+  var overlay = document.getElementById('checkoutSuccessOverlay');
+  var idEl = document.getElementById('successOrderId');
+  if (overlay) overlay.style.display = 'flex';
+  if (idEl) idEl.textContent = '#' + orderId;
+}
+
+function closeCheckoutSuccess() {
+  var overlay = document.getElementById('checkoutSuccessOverlay');
+  if (overlay) overlay.style.display = 'none';
 }
 
 function closeCheckoutModal() {
@@ -248,11 +273,11 @@ checkoutForm.addEventListener('submit', async function(e) {
   var totalWithShipping = Math.max(0, subtotal - discount + shippingCost);
 
   var data = {
-    name: form.name.value,
-    phone: form.phone.value,
-    email: form.email.value,
-    address: form.address.value,
-    notes: form.notes.value,
+    name: (form.name && form.name.value) ? form.name.value.trim() : '',
+    phone: (form.phone && form.phone.value) ? form.phone.value.trim() : '',
+    email: (form.email && form.email.value) ? form.email.value.trim() : '',
+    address: (form.address && form.address.value) ? form.address.value.trim() : '',
+    notes: (form.notes && form.notes.value) ? form.notes.value.trim() : '',
     items: cart,
     total: subtotal,
     shippingOptionId: (shippingSelect && shippingSelect.value) || 'none',
@@ -292,18 +317,20 @@ checkoutForm.addEventListener('submit', async function(e) {
         closeCheckoutModal();
         closeCartSidebar();
         form.reset();
+        showCheckoutStep(1);
         window.location.href = payData.paymentUrl;
         return;
       }
       alert('تعذر فتح صفحة الدفع: ' + (payData.message || 'حاول لاحقاً'));
     } else if (result.success) {
-      alert('تم استلام طلبك بنجاح! رقم الطلب: #' + result.orderId + '\nسنتواصل معك قريباً.');
       cart = [];
       saveCart();
       updateCartUI();
       closeCheckoutModal();
       closeCartSidebar();
       form.reset();
+      showCheckoutStep(1);
+      showCheckoutSuccess(result.orderId);
     } else {
       alert('حدث خطأ: ' + (result.message || 'يرجى المحاولة لاحقاً'));
     }
@@ -311,9 +338,24 @@ checkoutForm.addEventListener('submit', async function(e) {
     alert('تعذر الاتصال بالخادم. حاول لاحقاً.');
   } finally {
     submitBtn.disabled = false;
-    submitBtn.textContent = 'تأكيد الطلب';
+    submitBtn.textContent = 'تأكيد الطلب والدفع';
   }
 });
+
+document.getElementById('checkoutNext1') && document.getElementById('checkoutNext1').addEventListener('click', function() {
+  var form = document.getElementById('checkoutForm');
+  if (form.name && !form.name.value.trim()) { form.name.focus(); return; }
+  if (form.phone && !form.phone.value.trim()) { form.phone.focus(); return; }
+  if (form.address && !form.address.value.trim()) { form.address.focus(); return; }
+  showCheckoutStep(2);
+});
+document.getElementById('checkoutPrev2') && document.getElementById('checkoutPrev2').addEventListener('click', function() { showCheckoutStep(1); });
+document.getElementById('checkoutNext2') && document.getElementById('checkoutNext2').addEventListener('click', function() {
+  if (shippingSelect && !shippingSelect.value) { shippingSelect.focus(); return; }
+  showCheckoutStep(3);
+});
+document.getElementById('checkoutPrev3') && document.getElementById('checkoutPrev3').addEventListener('click', function() { showCheckoutStep(2); });
+document.getElementById('closeSuccessBtn') && document.getElementById('closeSuccessBtn').addEventListener('click', closeCheckoutSuccess);
 
 cartBtn.addEventListener('click', function() {
   cartSidebar.classList.add('open');
