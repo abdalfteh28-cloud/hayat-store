@@ -104,7 +104,7 @@
   <div id="loginScreen" class="login-wrap">
     <h2>تسجيل الدخول — لوحة التحكم</h2>
     <div id="loginStep1">
-      <p style="color:var(--admin-muted); font-size:0.9rem; margin-bottom:1rem;">أدخل اسم المستخدم وكلمة المرور، ثم سيُرسل كود إلى جوالك لإكمال الدخول.</p>
+      <p style="color:var(--admin-muted); font-size:0.9rem; margin-bottom:1rem;">أدخل اسم المستخدم وكلمة المرور. إذا لم يُضبط إرسال الكود في الإعدادات تدخل مباشرة بدون كود.</p>
       <form id="loginForm">
         <label><span>اسم المستخدم</span><input type="text" id="adminUser" name="username" required placeholder="HASSAN.1949" autocomplete="username"></label>
         <label class="password-wrap"><span>كلمة المرور</span>
@@ -150,8 +150,13 @@
         <div class="admin-header"><h1>المنتجات</h1></div>
         <p style="color:var(--admin-muted); margin-bottom:1rem;">عدّل وصف كل منتج، السعر، الكمية، والخصومات. التعديلات تظهر فوراً في المتجر.</p>
         <div id="productsEditor"></div>
-        <button type="button" id="saveProductsBtn" style="padding:0.75rem 1.5rem; background:var(--admin-primary); color:var(--admin-bg); border:none; border-radius:8px; font-family:var(--font); font-weight:700; cursor:pointer;">حفظ كل المنتجات</button>
+        <div style="display:flex; flex-wrap:wrap; gap:0.75rem; align-items:center; margin-top:1rem;">
+          <button type="button" id="saveProductsBtn" style="padding:0.75rem 1.5rem; background:var(--admin-primary); color:var(--admin-bg); border:none; border-radius:8px; font-family:var(--font); font-weight:700; cursor:pointer;">حفظ كل المنتجات</button>
+          <button type="button" id="exportProductsBtn" style="padding:0.75rem 1.25rem; background:var(--admin-bg); color:var(--admin-primary); border:1px solid var(--admin-primary); border-radius:8px; font-family:var(--font); font-weight:600; cursor:pointer;">📥 تصدير نسخة احتياطية</button>
+          <label style="padding:0.75rem 1.25rem; background:var(--admin-bg); color:var(--admin-primary); border:1px solid var(--admin-primary); border-radius:8px; font-family:var(--font); font-weight:600; cursor:pointer; margin:0;">📤 استعادة من ملف <input type="file" id="importProductsFile" accept=".json,application/json" style="display:none;"></label>
+        </div>
         <p id="productsSaved" class="saved-msg" style="display:none;">تم حفظ المنتجات.</p>
+        <p class="hint" style="font-size:0.8rem; color:var(--admin-muted); margin-top:0.5rem;">على Render: بعد الحفظ يُفضّل الضغط على «تصدير نسخة احتياطية» وحفظ الملف في مشروعك حتى لا تضيع التعديلات عند إعادة النشر.</p>
       </div>
 
       <div id="panelOrders" class="admin-panel">
@@ -418,6 +423,10 @@
             '<label><span>العنوان / المدة</span><input type="text" name="title" value="' + (p.title || '').replace(/"/g,'&quot;') + '" placeholder="شهري"></label>' +
             '<label><span>شرح المنتج</span><textarea name="longDescription" rows="4">' + (p.longDescription || '').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') + '</textarea></label>' +
             '<label><span>نسبة الخصم %</span><input type="number" name="discountPercent" min="0" max="100" value="' + (p.discountPercent != null ? p.discountPercent : 0) + '"></label>' +
+            '<strong style="color:var(--admin-primary); display:block; margin-top:0.75rem;">تحسينات SEO</strong>' +
+            '<label><span>عنوان صفحة المنتج (Page Title)</span><input type="text" name="seoPageTitle" value="' + (p.seoPageTitle || '').replace(/"/g,'&quot;') + '" placeholder="مثال: باقة حياة شهري — إنترنت لا محدود"></label>' +
+            '<label><span>رابط صفحة المنتج (SEO Page URL)</span><input type="text" name="seoPageUrl" value="' + (p.seoPageUrl || '').replace(/"/g,'&quot;') + '" placeholder="monthly أو باقة-شهري" dir="ltr"></label>' +
+            '<label><span>وصف صفحة المنتج (Page Description)</span><textarea name="seoPageDescription" rows="2">' + (p.seoPageDescription || '').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') + '</textarea></label>' +
           '</div>' +
           '<div><strong style="color:var(--admin-primary);">المزيد</strong>' +
             '<p class="more-stats">إحصائيات: ' + st.orderCount + ' طلب، ' + st.totalQty + ' وحدة مباعة</p>' +
@@ -465,6 +474,7 @@
     if (!adminAuth) { alert('يجب تسجيل الدخول أولاً'); return; }
     var container = document.getElementById('productsEditor');
     var cards = container ? container.querySelectorAll('.admin-product-card') : [];
+    if (!cards.length) { alert('لا توجد بطاقات منتجات. انتقل إلى قسم المنتجات وتأكد من تحميل القائمة ثم جرّب الحفظ مرة أخرى.'); return; }
     var products = [];
     cards.forEach(function(card) {
       var titleEl = card.querySelector('[name="title"]');
@@ -475,6 +485,9 @@
       var longEl = card.querySelector('[name="longDescription"]');
       var discountEl = card.querySelector('[name="discountPercent"]');
       var categoryEl = card.querySelector('[name="category"]');
+      var seoTitleEl = card.querySelector('[name="seoPageTitle"]');
+      var seoUrlEl = card.querySelector('[name="seoPageUrl"]');
+      var seoDescEl = card.querySelector('[name="seoPageDescription"]');
       products.push({
         id: parseInt(card.getAttribute('data-id'), 10) || products.length + 1,
         period: title,
@@ -487,16 +500,82 @@
         planClass: card.getAttribute('data-planclass') || 'plan-monthly',
         discountPercent: parseInt(discountEl && discountEl.value ? discountEl.value : 0, 10) || 0,
         couponCode: '',
-        category: (categoryEl && categoryEl.value ? categoryEl.value.trim() : '') || ''
+        category: (categoryEl && categoryEl.value ? categoryEl.value.trim() : '') || '',
+        seoPageTitle: (seoTitleEl && seoTitleEl.value ? seoTitleEl.value.trim() : '') || '',
+        seoPageUrl: (seoUrlEl && seoUrlEl.value ? seoUrlEl.value.trim() : '') || '',
+        seoPageDescription: (seoDescEl && seoDescEl.value ? seoDescEl.value.trim() : '') || ''
       });
     });
     adminProducts = products;
     var res = await fetch('/api/admin/products', { method: 'POST', headers: { ...authHeader(), 'Content-Type': 'application/json' }, body: JSON.stringify({ products: products }) });
-    var data = await res.json().catch(function() { return { success: false, message: 'استجابة غير صحيحة' }; });
+    var data = await res.json().catch(function() { return { success: false, message: 'استجابة غير صحيحة من الخادم' }; });
     if (data.success) {
       document.getElementById('productsSaved').style.display = 'block';
-      setTimeout(function() { document.getElementById('productsSaved').style.display = 'none'; }, 3000);
-    } else alert((data && data.message) || 'فشل الحفظ. تأكد من تسجيل الدخول.');
+      document.getElementById('productsSaved').textContent = (data.message || 'تم حفظ المنتجات.');
+      setTimeout(function() { document.getElementById('productsSaved').style.display = 'none'; document.getElementById('productsSaved').textContent = 'تم حفظ المنتجات.'; }, 4000);
+    } else {
+      alert((data && data.message) || 'فشل الحفظ. إذا ظهر «يجب تسجيل الدخول» أعد تسجيل الدخول ثم احفظ مرة أخرى.');
+    }
+  });
+
+  document.getElementById('exportProductsBtn').addEventListener('click', function() {
+    var container = document.getElementById('productsEditor');
+    var cards = container ? container.querySelectorAll('.admin-product-card') : [];
+    var toExport = [];
+    if (cards.length) {
+      cards.forEach(function(card) {
+        var titleEl = card.querySelector('[name="title"]');
+        var descEl = card.querySelector('[name="desc"]');
+        var title = (titleEl && titleEl.value ? titleEl.value.trim() : '') || (descEl && descEl.value ? descEl.value.trim() : '') || 'شهري';
+        var priceEl = card.querySelector('[name="price"]');
+        var qtyEl = card.querySelector('[name="quantity"]');
+        var longEl = card.querySelector('[name="longDescription"]');
+        var discountEl = card.querySelector('[name="discountPercent"]');
+        var categoryEl = card.querySelector('[name="category"]');
+        toExport.push({
+          id: parseInt(card.getAttribute('data-id'), 10) || toExport.length + 1,
+          period: title,
+          title: title,
+          desc: (descEl && descEl.value ? descEl.value.trim() : '') || '',
+          longDescription: (longEl && longEl.value ? longEl.value.trim() : '') || '',
+          price: parseInt(priceEl && priceEl.value ? priceEl.value : 0, 10) || 0,
+          quantity: parseInt(qtyEl && qtyEl.value ? qtyEl.value : 999, 10) || 999,
+          image: card.getAttribute('data-image') || 'plan-monthly.png',
+          planClass: card.getAttribute('data-planclass') || 'plan-monthly',
+          discountPercent: parseInt(discountEl && discountEl.value ? discountEl.value : 0, 10) || 0,
+          couponCode: '',
+          category: (categoryEl && categoryEl.value ? categoryEl.value.trim() : '') || '',
+          seoPageTitle: (card.querySelector('[name="seoPageTitle"]') && card.querySelector('[name="seoPageTitle"]').value) ? card.querySelector('[name="seoPageTitle"]').value.trim() : '',
+          seoPageUrl: (card.querySelector('[name="seoPageUrl"]') && card.querySelector('[name="seoPageUrl"]').value) ? card.querySelector('[name="seoPageUrl"]').value.trim() : '',
+          seoPageDescription: (card.querySelector('[name="seoPageDescription"]') && card.querySelector('[name="seoPageDescription"]').value) ? card.querySelector('[name="seoPageDescription"]').value.trim() : ''
+        });
+      });
+    } else toExport = adminProducts;
+    var data = JSON.stringify(toExport.length ? toExport : adminProducts, null, 2);
+    var blob = new Blob([data], { type: 'application/json' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'products-backup-' + new Date().toISOString().slice(0,10) + '.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  document.getElementById('importProductsFile').addEventListener('change', async function() {
+    var file = this.files && this.files[0];
+    if (!file) return;
+    var text = await new Promise(function(resolve, reject) {
+      var r = new FileReader();
+      r.onload = function() { resolve(r.result); };
+      r.onerror = reject;
+      r.readAsText(file, 'UTF-8');
+    });
+    var list = [];
+    try { list = JSON.parse(text); } catch (e) { alert('ملف غير صالح. استخدم ملف JSON مصدّر من المتجر.'); this.value = ''; return; }
+    if (!Array.isArray(list)) { alert('المحتوى يجب أن يكون مصفوفة منتجات.'); this.value = ''; return; }
+    var res = await fetch('/api/admin/products', { method: 'POST', headers: { ...authHeader(), 'Content-Type': 'application/json' }, body: JSON.stringify({ products: list }) });
+    var data = await res.json().catch(function() { return {}; });
+    if (data.success) { adminProducts = list; renderAdminProducts(adminProducts, {}); alert('تم استعادة ' + list.length + ' منتج.'); } else { alert(data.message || 'فشلت الاستعادة.'); }
+    this.value = '';
   });
 
   var allOrdersCache = [];

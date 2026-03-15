@@ -1,5 +1,11 @@
-// باقات حياة — المنتجات تُحمّل من API
-let products = [];
+// باقات حياة — عرض المتجر فوراً مع باقات افتراضية، ثم تحديث من API
+var DEFAULT_PRODUCTS = [
+  { id: 1, period: 'شهري', title: 'شهري', desc: 'لا محدود بدون استخدام عادل', price: 269, planClass: 'plan-monthly', image: 'plan-monthly.png', quantity: 999 },
+  { id: 2, period: '3 شهور', title: '٣ شهور', desc: 'لا محدود بدون استخدام عادل', price: 719, planClass: 'plan-3months', image: 'plan-3months.png', quantity: 999 },
+  { id: 3, period: '6 شهور', title: '٦ شهور', desc: 'لا محدود بدون استخدام عادل', price: 1349, planClass: 'plan-6months', image: 'plan-6months.png', quantity: 999 },
+  { id: 4, period: 'سنة', title: 'سنة', desc: 'لا محدود بدون استخدام عادل', price: 2200, planClass: 'plan-year', image: 'plan-year.png', quantity: 999 }
+];
+let products = DEFAULT_PRODUCTS.slice();
 let cart = JSON.parse(localStorage.getItem('hayatCart') || '[]');
 let storeConfig = { paymentGateway: 'none', shippingEnabled: true };
 let shippingOptions = [];
@@ -46,7 +52,7 @@ function formatLongDesc(text) {
 function renderProducts() {
   if (!productsGrid) return;
   if (products.length === 0) {
-    productsGrid.innerHTML = '<p class="products-loading">جاري تحميل الباقات...</p>';
+    productsGrid.innerHTML = '';
     return;
   }
   productsGrid.innerHTML = products.map(function(p) {
@@ -68,11 +74,12 @@ function renderProducts() {
         '<span class="product-price">' + finalPrice + ' <small>ر.س</small></span>' +
         (discountP > 0 ? '<span class="product-discount-badge">−' + discountP + '%</span>' : '') +
       '</div>' +
-      '<div class="product-options-box">' +
-        '<label class="product-qty-label"><span>الكمية</span><select class="product-qty-select" data-id="' + p.id + '">' +
-          Array.from({ length: qtyMax }, function(_, i) { return '<option value="' + (i + 1) + '">' + (i + 1) + '</option>'; }).join('') +
-        '</select></label>' +
-      '</div>' +
+      '<div class="product-qty-external"><label class="product-qty-label"><span>الكمية</span><select class="product-qty-select" data-id="' + p.id + '">' +
+        Array.from({ length: qtyMax }, function(_, i) { return '<option value="' + (i + 1) + '">' + (i + 1) + '</option>'; }).join('') +
+      '</select></label></div>' +
+      '<div class="product-options-box"><label class="product-qty-label product-qty-inner"><span>الكمية (داخلي)</span><select class="product-qty-select product-qty-inner" data-id="' + p.id + '">' +
+        Array.from({ length: qtyMax }, function(_, i) { return '<option value="' + (i + 1) + '">' + (i + 1) + '</option>'; }).join('') +
+      '</select></label></div>' +
       (longDesc ? '<div class="product-data-box"><button type="button" class="product-data-toggle" aria-expanded="false"><span>بيانات المنتج</span><span class="toggle-icon">▼</span></button><div class="product-data-content">' + longDesc + '</div></div>' : '') +
       '<button type="button" class="add-to-cart-btn" data-id="' + p.id + '">أضف إلى السلة</button>' +
     '</article>';
@@ -88,12 +95,23 @@ function renderProducts() {
     });
   });
 
+  productsGrid.querySelectorAll('.product-card').forEach(function(card) {
+    var id = card.getAttribute('data-id');
+    var selects = card.querySelectorAll('.product-qty-select[data-id="' + id + '"]');
+    selects.forEach(function(sel) {
+      sel.addEventListener('change', function() {
+        var v = this.value;
+        selects.forEach(function(s) { if (s !== sel) s.value = v; });
+      });
+    });
+  });
   productsGrid.querySelectorAll('.add-to-cart-btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
       var id = parseInt(btn.dataset.id, 10);
       var product = products.find(function(x) { return x.id === id; });
       if (!product) return;
-      var select = productsGrid.querySelector('.product-qty-select[data-id="' + id + '"]');
+      var card = btn.closest('.product-card');
+      var select = card ? card.querySelector('.product-qty-select[data-id="' + id + '"]') : productsGrid.querySelector('.product-qty-select[data-id="' + id + '"]');
       var qty = select ? parseInt(select.value, 10) : 1;
       var discountP = (product.discountPercent != null ? product.discountPercent : 0) || 0;
       var price = discountP > 0 ? Math.round((product.price || 0) * (100 - discountP) / 100) : (product.price || 0);
@@ -265,6 +283,10 @@ if (couponInput) couponInput.addEventListener('blur', applyCoupon);
 checkoutForm.addEventListener('submit', async function(e) {
   e.preventDefault();
   var form = e.target;
+  var addrEl = document.getElementById('checkoutAddressFull');
+  var addressFull = getCheckoutAddressFull(form);
+  if (addrEl) addrEl.value = addressFull;
+  if (!addressFull && form.address && form.address.value) addressFull = form.address.value.trim();
   var submitBtn = form.querySelector('.submit-order');
   var selectedShip = shippingOptions.find(function(o) { return o.id === (shippingSelect && shippingSelect.value); });
   var shippingCost = selectedShip ? selectedShip.price : 0;
@@ -276,7 +298,7 @@ checkoutForm.addEventListener('submit', async function(e) {
     name: (form.name && form.name.value) ? form.name.value.trim() : '',
     phone: (form.phone && form.phone.value) ? form.phone.value.trim() : '',
     email: (form.email && form.email.value) ? form.email.value.trim() : '',
-    address: (form.address && form.address.value) ? form.address.value.trim() : '',
+    address: addressFull || (form.address && form.address.value ? form.address.value.trim() : ''),
     notes: (form.notes && form.notes.value) ? form.notes.value.trim() : '',
     items: cart,
     total: subtotal,
@@ -342,11 +364,26 @@ checkoutForm.addEventListener('submit', async function(e) {
   }
 });
 
+function getCheckoutAddressFull(form) {
+  var city = (form.addressCity && form.addressCity.value) ? form.addressCity.value.trim() : '';
+  var district = (form.addressDistrict && form.addressDistrict.value) ? form.addressDistrict.value.trim() : '';
+  var street = (form.addressStreet && form.addressStreet.value) ? form.addressStreet.value.trim() : '';
+  var houseNo = (form.addressHouseNo && form.addressHouseNo.value) ? form.addressHouseNo.value.trim() : '';
+  var desc = (form.addressDesc && form.addressDesc.value) ? form.addressDesc.value.trim() : '';
+  return [city, district, street, houseNo, desc].filter(Boolean).join('، ') || '';
+}
+
 document.getElementById('checkoutNext1') && document.getElementById('checkoutNext1').addEventListener('click', function() {
   var form = document.getElementById('checkoutForm');
   if (form.name && !form.name.value.trim()) { form.name.focus(); return; }
   if (form.phone && !form.phone.value.trim()) { form.phone.focus(); return; }
-  if (form.address && !form.address.value.trim()) { form.address.focus(); return; }
+  if (form.addressCity && !form.addressCity.value.trim()) { form.addressCity.focus(); return; }
+  if (form.addressDistrict && !form.addressDistrict.value.trim()) { form.addressDistrict.focus(); return; }
+  if (form.addressStreet && !form.addressStreet.value.trim()) { form.addressStreet.focus(); return; }
+  if (form.addressHouseNo && !form.addressHouseNo.value.trim()) { form.addressHouseNo.focus(); return; }
+  var fullAddr = getCheckoutAddressFull(form);
+  var addrEl = document.getElementById('checkoutAddressFull');
+  if (addrEl) addrEl.value = fullAddr;
   showCheckoutStep(2);
 });
 document.getElementById('checkoutPrev2') && document.getElementById('checkoutPrev2').addEventListener('click', function() { showCheckoutStep(1); });
@@ -373,23 +410,36 @@ function closeCartSidebar() {
 }
 
 fetch('/api/health').then(function(r) { return r.json(); }).then(function(d) { if (d.ok) window.__backendConnected = true; }).catch(function() { window.__backendConnected = false; });
-fetch('/api/config').then(function(r) { return r.json(); }).then(function(c) { storeConfig = c; }).catch(function() {});
+fetch('/api/config').then(function(r) { return r.json(); }).then(function(c) {
+  storeConfig = c;
+  var wa = (c.whatsappPhone || '').replace(/\D/g, '');
+  if (wa.length <= 9 && wa.charAt(0) === '5') wa = '966' + wa;
+  else if (wa.length === 10 && wa.charAt(0) === '0') wa = '966' + wa.slice(1);
+  else if (wa.length < 10) wa = '966' + (c.whatsappPhone || '506323309');
+  var waLinkEl = document.getElementById('whatsappLink');
+  var waNumEl = document.getElementById('whatsappNum');
+  if (waLinkEl) waLinkEl.href = 'https://wa.me/' + wa;
+  if (waNumEl) waNumEl.textContent = (c.whatsappPhone || '').replace(/\D/g, '').length >= 9 ? (c.whatsappPhone || '').trim() : '';
+}).catch(function() {});
+
+// عرض الباقات فوراً (من الافتراضي)، ثم تحديث من API في الخلفية
+if (productsGrid) renderProducts();
 
 fetch('/api/products')
   .then(function(r) { return r.json(); })
   .then(function(data) {
-    if (data.success && Array.isArray(data.products)) products = data.products;
-    renderProducts();
+    if (data.success && Array.isArray(data.products) && data.products.length) {
+      products = data.products;
+      renderProducts();
+    }
+    if (products.length && products[0].seoPageTitle) document.title = products[0].seoPageTitle;
+    if (products.length && products[0].seoPageDescription) {
+      var meta = document.querySelector('meta[name="description"]');
+      if (!meta) { meta = document.createElement('meta'); meta.name = 'description'; document.head.appendChild(meta); }
+      meta.content = products[0].seoPageDescription;
+    }
   })
-  .catch(function() {
-    products = [
-      { id: 1, period: 'شهري', title: 'شهري', desc: 'لا محدود بدون استخدام عادل', price: 269, planClass: 'plan-monthly', image: 'plan-monthly.png', quantity: 999 },
-      { id: 2, period: '3 شهور', title: '٣ شهور', desc: 'لا محدود بدون استخدام عادل', price: 719, planClass: 'plan-3months', image: 'plan-3months.png', quantity: 999 },
-      { id: 3, period: '6 شهور', title: '٦ شهور', desc: 'لا محدود بدون استخدام عادل', price: 1349, planClass: 'plan-6months', image: 'plan-6months.png', quantity: 999 },
-      { id: 4, period: 'سنة', title: 'سنة', desc: 'لا محدود بدون استخدام عادل', price: 2200, planClass: 'plan-year', image: 'plan-year.png', quantity: 999 }
-    ];
-    renderProducts();
-  });
+  .catch(function() {});
 
 if (paymentSuccessToast) {
   var params = new URLSearchParams(window.location.search);

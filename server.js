@@ -212,6 +212,8 @@ function readProducts() {
 }
 
 function saveProducts(products) {
+  const dataDir = path.join(__dirname, 'data');
+  if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
   fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(products, null, 2), 'utf8');
 }
 
@@ -299,7 +301,8 @@ app.get('/api/config', (req, res) => {
     paymentGateway: c.moyasarSecretKey ? 'moyasar' : 'none',
     shippingEnabled: true,
     googleAnalyticsId: c.googleAnalyticsId || '',
-    baseUrl: c.baseUrl
+    baseUrl: c.baseUrl,
+    whatsappPhone: c.whatsappPhone || '0506323309'
   });
 });
 
@@ -612,12 +615,16 @@ app.post('/api/admin/products', (req, res) => {
     if (!auth || !verifyAdmin(auth.username, auth.password)) {
       return res.status(401).json({ success: false, message: 'يجب تسجيل الدخول' });
     }
-    const products = req.body.products;
-    if (!Array.isArray(products)) return res.status(400).json({ success: false, message: 'بيانات غير صالحة' });
+    const body = req.body && typeof req.body === 'object' ? req.body : {};
+    const products = body.products;
+    if (!Array.isArray(products)) {
+      return res.status(400).json({ success: false, message: 'بيانات المنتجات غير صالحة أو ناقصة' });
+    }
     saveProducts(products);
-    res.json({ success: true, message: 'تم حفظ المنتجات' });
+    res.json({ success: true, message: 'تم حفظ المنتجات (' + products.length + ')' });
   } catch (err) {
-    res.status(500).json({ success: false, message: 'حدث خطأ' });
+    console.error('Save products error:', err);
+    res.status(500).json({ success: false, message: 'حدث خطأ في الحفظ: ' + (err.message || 'جرّب مرة أخرى') });
   }
 });
 

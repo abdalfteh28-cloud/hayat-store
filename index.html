@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>حياة: تواصل... أينما كنت | شرائح الإنترنت</title>
+  <meta name="description" content="متجر حياة — شرائح إنترنت STC لا محدود بدون استخدام عادل. باقات شهري و٣ و٦ شهور وسنة. توصيل لجميع المناطق.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -277,16 +278,18 @@
             <span>البريد الإلكتروني (اختياري)</span>
             <input type="email" name="email" placeholder="example@email.com">
           </label>
-          <label class="field-with-icon">
-            <span class="label-icon" aria-hidden="true">📍</span>
-            <span>العنوان التفصيلي للتوصيل</span>
-            <input type="text" name="address" required placeholder="المدينة، الحي، الشارع، رقم المبنى، الرمز البريدي">
-          </label>
+          <p class="step-title" style="margin-top:1rem;">العنوان التفصيلي للتوصيل</p>
+          <label><span>المدينة</span><input type="text" name="addressCity" required placeholder="المدينة"></label>
+          <label><span>الحي</span><input type="text" name="addressDistrict" required placeholder="الحي"></label>
+          <label><span>الشارع</span><input type="text" name="addressStreet" required placeholder="الشارع"></label>
+          <label><span>رقم المنزل</span><input type="text" name="addressHouseNo" required placeholder="رقم المنزل"></label>
+          <label><span>وصف المنزل / معلم (اختياري)</span><input type="text" name="addressDesc" placeholder="مثال: بجانب مسجد، الطابق الثاني"></label>
+          <input type="hidden" name="address" id="checkoutAddressFull">
           <label>
             <span>ملاحظات (اختياري)</span>
             <textarea name="notes" rows="2" placeholder="ملاحظات إضافية للطلب"></textarea>
           </label>
-          <button type="button" class="btn-next" id="checkoutNext1">التالي ← اختيار الشحن</button>
+          <button type="button" class="btn-next" id="checkoutNext1">تأكيد ← التوصيل</button>
         </div>
         <div class="checkout-step" id="checkoutStep2" style="display:none;">
           <p class="step-title">شركة الشحن وطريقة التوصيل</p>
@@ -305,7 +308,7 @@
           </label>
           <div class="step-buttons">
             <button type="button" class="btn-prev" id="checkoutPrev2">← السابق</button>
-            <button type="button" class="btn-next" id="checkoutNext2">التالي ← الملخص والدفع</button>
+            <button type="button" class="btn-next" id="checkoutNext2">تأكيد ← الدفع</button>
           </div>
         </div>
         <div class="checkout-step" id="checkoutStep3" style="display:none;">
@@ -362,10 +365,17 @@
 
   <footer class="footer">
     <div class="container">
+      <div class="footer-whatsapp" id="footerWhatsapp">
+        <a href="#" id="whatsappLink" class="whatsapp-cta" target="_blank" rel="noopener" aria-label="تواصل عبر واتساب">
+          <span class="whatsapp-icon">💬</span>
+          <span class="whatsapp-text">تواصل معنا على واتساب</span>
+          <span class="whatsapp-num" id="whatsappNum"></span>
+        </a>
+      </div>
       <p>© حياة: تواصل... أينما كنت — جميع الحقوق محفوظة</p>
       <p class="footer-tags">#حياة #إنترنت #شرائح_بيانات #تواصل_بلا_حدود</p>
       <p><a href="/admin" class="admin-link">إعدادات المتجر (بوابة الدفع والشحن)</a></p>
-      <p class="backend-status" id="backendStatus">جاري التحقق من الاتصال...</p>
+      <p class="backend-status" id="backendStatus" aria-live="polite"></p>
     </div>
   </footer>
 

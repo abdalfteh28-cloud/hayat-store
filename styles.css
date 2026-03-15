@@ -660,6 +660,11 @@ body {
   border-radius: 6px;
   margin-right: 0.5rem;
 }
+.product-qty-external {
+  margin: 0 1.25rem 0.6rem;
+}
+.product-qty-external .product-qty-label span { font-weight: 700; color: var(--text); }
+.product-qty-inner .product-qty-label span { font-size: 0.85rem; }
 .product-qty-label {
   display: block;
   margin-bottom: 0.75rem;
@@ -1217,8 +1222,9 @@ body {
   cursor: pointer;
 }
 
-/* خطوات إتمام الطلب */
-.checkout-steps .modal-content { max-width: 440px; }
+/* خطوات إتمام الطلب — الصفحة تظهر كاملة مع تمرير */
+.checkout-steps .modal-content { max-width: 480px; max-height: 95vh; overflow-y: auto; overflow-x: hidden; }
+.checkout-modal .modal-content { max-height: 95vh; overflow-y: auto; }
 .checkout-progress {
   display: flex;
   align-items: center;
@@ -1428,6 +1434,31 @@ body {
   color: var(--text-muted);
   font-size: 0.9rem;
 }
+
+.footer-whatsapp {
+  margin-bottom: 1.25rem;
+}
+.whatsapp-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: #25d366;
+  color: #fff;
+  border-radius: 12px;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 1rem;
+  box-shadow: 0 4px 14px rgba(37, 211, 102, 0.4);
+  transition: background 0.2s, transform 0.15s;
+}
+.whatsapp-cta:hover {
+  background: #20bd5a;
+  color: #fff;
+  transform: scale(1.02);
+}
+.whatsapp-cta .whatsapp-icon { font-size: 1.35rem; }
+.whatsapp-cta .whatsapp-num { font-size: 0.95rem; opacity: 0.95; margin-right: 0.25rem; }
 
 .footer-tags {
   margin-top: 0.5rem;
